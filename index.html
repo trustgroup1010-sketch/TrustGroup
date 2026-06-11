@@ -118,14 +118,47 @@
     .mobile-menu-btn { display: none; position: fixed; top: 68px; right: 10px; z-index: 199; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 5px 9px; font-size: 16px; cursor: pointer; }
 
     @media (max-width: 700px) {
+      /* sidebar */
       .sidebar { transform: translateX(100%); transition: transform 0.2s; top: 60px; }
       .sidebar.open { transform: translateX(0); }
-      .main { margin-right: 0; padding: 1rem; }
+      .main { margin-right: 0; padding: .75rem; padding-top: 1rem; }
       .mobile-menu-btn { display: block; }
+
+      /* topnav */
+      .topnav { padding: 0 .6rem; gap: 6px; }
+      .topnav-logo { height: 34px; }
+      .topnav-tabs { gap: 2px; }
+      .tab-btn { padding: 5px 8px; font-size: 11px; border-radius: 6px; }
+
+      /* metrics */
       .metrics { grid-template-columns: 1fr 1fr; }
       .metric:last-child { grid-column: span 2; }
-      .topnav-tabs { gap: 2px; }
-      .tab-btn { padding: 6px 10px; font-size: 12px; }
+      .metric-val { font-size: 16px; }
+
+      /* inputs stack vertically */
+      .input-row { flex-direction: column; align-items: stretch; }
+      .input-row input, .input-row select, .input-row button { width: 100% !important; }
+
+      /* tables scroll horizontally */
+      .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 480px; }
+      th, td { padding: 6px 8px; font-size: 12px; }
+
+      /* emp card */
+      .emp-card-header { flex-wrap: wrap; gap: 6px; }
+      .emp-card-name { font-size: 14px; }
+      .emp-card-summary { font-size: 11px; }
+      .emp-card-body { padding: .75rem; }
+      .emp-meta { gap: 8px; }
+      .emp-meta span { font-size: 12px; padding: 3px 8px; }
+
+      /* page top */
+      .page-top { flex-wrap: wrap; gap: 6px; }
+      .page-name-display { font-size: 16px; }
+
+      /* card padding */
+      .card { padding: .75rem; }
+      .card-title { font-size: 13px; }
     }
   </style>
 </head>
