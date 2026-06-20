@@ -4,156 +4,340 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Trust Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Zilla+Slab:ital,wght@0,500;0,600;0,700;1,500&display=swap');
+
+:root{
+  --ink:#1B1D22;
+  --paper:#FAF8F3;
+  --card:#FFFFFF;
+  --rule:#E4DFD3;
+  --rule-strong:#D6CFBC;
+  --red:#A8222F;
+  --red-soft:#FBEEEE;
+  --green:#1E6B4E;
+  --green-soft:#EAF4EE;
+  --gold:#9C7A3C;
+  --gold-soft:#F6EFE1;
+  --muted:#6F6A60;
+  --muted-2:#9B958A;
+}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f2f2f2;color:#1a1a1a;min-height:100vh}
-.topnav{position:fixed;top:0;left:0;right:0;height:56px;background:#fff;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;padding:0 1rem;z-index:200;gap:8px}
-.topnav-logo{height:40px;object-fit:contain;flex-shrink:0}
-.topnav-tabs{display:flex;gap:3px;flex:1;justify-content:center;flex-wrap:wrap}
-.tab-btn{padding:6px 13px;border-radius:8px;border:1px solid transparent;cursor:pointer;font-size:12px;font-family:inherit;background:transparent;color:#666;white-space:nowrap}
-.tab-btn:hover{background:#f5f5f5;color:#1a1a1a}
-.tab-btn.active{background:#1a1a1a;color:#fff}
-.mob-menu{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#1a1a1a;padding:4px;flex-shrink:0}
-.layout{display:flex;padding-top:56px;min-height:100vh}
-.sidebar{position:fixed;top:56px;right:0;width:220px;height:calc(100vh - 56px);background:#fff;border-left:1px solid #e5e5e5;display:flex;flex-direction:column;z-index:100;transition:transform .2s}
-.sidebar-hd{padding:.85rem;border-bottom:1px solid #f0f0f0}
-.sidebar-title{font-size:12px;font-weight:600;color:#888;margin-bottom:7px}
-.btn-new{width:100%;padding:7px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer}
-.btn-new:hover{background:#333}
-.pages-list{flex:1;overflow-y:auto;padding:5px}
-.pi{display:flex;align-items:center;justify-content:space-between;padding:7px 8px;border-radius:8px;cursor:pointer;margin-bottom:2px}
-.pi:hover{background:#f5f5f5}
-.pi.active{background:#f0f0f0;font-weight:600}
+body{font-family:'Cairo',Tahoma,Arial,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:var(--gold-soft)}
+
+/* ===== LOGIN SCREEN ===== */
+.login-screen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:500;padding:1rem}
+.login-card{background:var(--card);border-radius:8px;padding:2rem 1.8rem;width:100%;max-width:340px;border-top:3px solid var(--gold);box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.login-logo{display:block;max-width:160px;margin:0 auto 1.3rem;height:auto}
+.login-title{font-family:'Zilla Slab',serif;font-size:18px;font-weight:700;text-align:center;color:var(--ink);margin-bottom:1.3rem}
+.login-field{margin-bottom:.9rem}
+.login-field label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.login-error{color:var(--red);font-size:12px;font-weight:600;text-align:center;min-height:16px;margin-bottom:.5rem}
+.login-btn{width:100%;padding:10px;font-size:13px;margin-top:.3rem}
+.user-badge{font-size:11px;font-weight:600;color:#C8C4B8;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.user-badge .role-tag{background:rgba(255,255,255,.1);padding:2px 9px;border-radius:4px;font-size:10px}
+.user-badge .logout-btn{background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:5px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:inherit}
+.user-badge .logout-btn:hover{background:rgba(255,255,255,.1)}
+@media(max-width:700px){
+  .user-badge{display:none}
+}
+
+/* ===== MANAGER (READ-ONLY) ROLE RESTRICTIONS ===== */
+body.role-manager .btn-new,
+body.role-manager .btn-x,
+body.role-manager .btn-del-page,
+body.role-manager .erp-entry-toolbar,
+body.role-manager .entry-mode-tabs,
+body.role-manager .inv-builder,
+body.role-manager input,
+body.role-manager select,
+body.role-manager .btn:not(.btn-sm):not(.month-tab),
+body.role-manager .btn-sm:not([onclick*="print"]):not([onclick*="Month"]):not([onclick*="toggle"]):not([onclick*="open"]):not([onclick*="back"]),
+body.role-manager .day-check-row .chk,
+body.role-manager .ot-inp{display:none!important}
+body.role-manager .erp-row{cursor:default}
+body.role-manager .pname,body.role-manager .erp-detail-name{cursor:default;pointer-events:none}
+
+/* ===== TOP NAV ===== */
+.topnav{position:fixed;top:0;left:0;right:0;height:62px;background:var(--ink);border-bottom:3px solid var(--gold);display:flex;align-items:center;padding:0 1.1rem;z-index:200;gap:10px}
+.topnav-logo{height:38px;object-fit:contain;flex-shrink:0;filter:brightness(0) invert(1) drop-shadow(0 0 0 transparent);background:#fff;border-radius:6px;padding:3px 8px}
+.topnav-tabs{display:flex;gap:2px;flex:1;justify-content:center;flex-wrap:wrap}
+.tab-btn{padding:9px 16px;border-radius:0;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:12.5px;font-weight:600;font-family:inherit;background:transparent;color:#C8C4B8;white-space:nowrap;letter-spacing:.2px;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:#fff}
+.tab-btn.active{color:#fff;border-bottom-color:var(--gold)}
+.mob-menu{display:none;background:none;border:none;font-size:20px;cursor:pointer;color:#fff;padding:4px;flex-shrink:0}
+
+/* ===== LAYOUT ===== */
+.layout{display:flex;padding-top:62px;min-height:100vh}
+.sidebar{position:fixed;top:62px;right:0;width:226px;height:calc(100vh - 62px);background:var(--card);border-left:1px solid var(--rule);display:flex;flex-direction:column;z-index:100;transition:transform .2s}
+.sidebar-hd{padding:1rem .95rem .85rem}
+.sidebar-title{font-size:11px;font-weight:700;color:var(--muted-2);margin-bottom:9px;text-transform:uppercase;letter-spacing:.08em}
+.btn-new{width:100%;padding:8px;background:var(--ink);color:#fff;border:none;border-radius:5px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:.1px}
+.btn-new:hover{background:#000}
+.pages-list{flex:1;overflow-y:auto;padding:6px}
+.pi{display:flex;align-items:center;justify-content:space-between;padding:8px 9px;border-radius:5px;cursor:pointer;margin-bottom:1px;border-right:2px solid transparent}
+.pi:hover{background:var(--paper)}
+.pi.active{background:var(--gold-soft);border-right-color:var(--gold)}
 .pi-left{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-.pi-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pi-sub{font-size:11px;color:#888}
-.pi-sub.pos{color:#c0392b}
-.pi-sub.neg{color:#27ae60}
-.btn-x{background:none;border:none;cursor:pointer;color:#ccc;font-size:15px;padding:2px 3px;flex-shrink:0}
-.btn-x:hover{color:#e74c3c}
-.sidebar-ft{padding:7px;border-top:1px solid #f0f0f0;font-size:11px;color:#bbb;text-align:center}
-.main{margin-right:220px;padding:1rem;flex:1;min-width:0}
+.pi-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.pi-sub{font-size:10.5px;color:var(--muted-2);font-variant-numeric:tabular-nums}
+.pi-sub.pos{color:var(--red)}
+.pi-sub.neg{color:var(--green)}
+.btn-x{background:none;border:none;cursor:pointer;color:var(--muted-2);font-size:15px;padding:2px 3px;flex-shrink:0;border-radius:4px}
+.btn-x:hover{color:var(--red);background:var(--red-soft)}
+.sidebar-ft{padding:8px;border-top:1px solid var(--rule);font-size:10.5px;color:var(--muted-2);text-align:center;font-weight:600;letter-spacing:.04em}
+
+.main{margin-right:226px;padding:1.4rem 1.6rem;flex:1;min-width:0}
 .section{display:none}
 .section.active{display:block}
 .page-view{display:none}
 .page-view.active{display:block}
-.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:55vh;color:#bbb;text-align:center;gap:10px}
-.welcome h2{font-size:16px;font-weight:500;color:#888}
-.card{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:.85rem 1rem;margin-bottom:.85rem}
-.card-title{font-size:13px;font-weight:600;margin-bottom:9px;color:#444}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:1rem}
-.metric{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:.75rem;text-align:center}
-.metric-label{font-size:11px;color:#888;margin-bottom:4px}
-.metric-val{font-size:18px;font-weight:600}
-.metric-val.red{color:#c0392b}
-.metric-val.green{color:#27ae60}
-.input-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-input[type=number],input[type=text],input[type=date],input[type=time],select{border:1px solid #ddd;border-radius:8px;padding:6px 10px;font-size:12px;outline:none;background:#fafafa;color:#1a1a1a;font-family:inherit;width:100%}
-input:focus,select:focus{border-color:#aaa;background:#fff}
-.btn{padding:6px 13px;border-radius:8px;border:1px solid #ddd;cursor:pointer;font-size:12px;font-family:inherit;background:#fff;color:#1a1a1a;white-space:nowrap}
-.btn:hover{background:#f5f5f5}
-.btn-red{border-color:#e74c3c;color:#c0392b}
-.btn-red:hover{background:#fff0ef}
-.btn-green{border-color:#2ecc71;color:#27ae60}
-.btn-green:hover{background:#edfbf3}
-.btn-dark{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.btn-dark:hover{background:#333}
-.btn-sm{font-size:11px;padding:3px 7px;color:#999;border-color:#e5e5e5;white-space:nowrap}
+
+/* ===== WELCOME ===== */
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:55vh;color:var(--muted-2);text-align:center;gap:10px}
+.welcome h2{font-size:15px;font-weight:600;color:var(--muted);font-family:'Cairo',sans-serif}
+
+/* ===== CARDS ===== */
+.card{background:var(--card);border:1px solid var(--rule);border-top:2px solid var(--rule-strong);border-radius:6px;padding:1rem 1.15rem;margin-bottom:.9rem}
+.card-title{font-size:12.5px;font-weight:700;margin-bottom:11px;color:var(--ink);letter-spacing:.01em;display:flex;align-items:center;gap:6px}
+
+/* ===== METRICS ===== */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.1rem}
+.metric{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:.85rem .7rem;text-align:center;position:relative}
+.metric::before{content:'';position:absolute;top:0;right:0;left:0;height:2px;background:var(--rule-strong);border-radius:6px 6px 0 0}
+.metric-label{font-size:10.5px;color:var(--muted);margin-bottom:5px;font-weight:600;letter-spacing:.02em}
+.metric-val{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;font-family:'Zilla Slab',serif}
+.metric-val.red{color:var(--red)}
+.metric-val.green{color:var(--green)}
+
+/* ===== INPUTS ===== */
+.input-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+input[type=number],input[type=text],input[type=date],input[type=time],select{
+  border:1px solid var(--rule-strong);border-radius:5px;padding:7px 11px;font-size:12.5px;outline:none;
+  background:var(--paper);color:var(--ink);font-family:inherit;width:100%;transition:border-color .15s,background .15s
+}
+input:focus,select:focus{border-color:var(--gold);background:#fff}
+input::placeholder{color:var(--muted-2)}
+
+/* ===== BUTTONS ===== */
+.btn{padding:7px 15px;border-radius:5px;border:1px solid var(--rule-strong);cursor:pointer;font-size:12.5px;font-weight:600;font-family:inherit;background:#fff;color:var(--ink);white-space:nowrap;transition:all .15s}
+.btn:hover{background:var(--paper);border-color:var(--muted-2)}
+.btn-red{border-color:var(--red);color:var(--red);background:#fff}
+.btn-red:hover{background:var(--red-soft)}
+.btn-green{border-color:var(--green);color:var(--green);background:#fff}
+.btn-green:hover{background:var(--green-soft)}
+.btn-dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-dark:hover{background:#000}
+.btn-sm{font-size:11px;padding:4px 9px;color:var(--muted);border-color:var(--rule);font-weight:600;white-space:nowrap}
+.btn-sm:hover{color:var(--ink);border-color:var(--muted-2)}
+
+/* ===== TABLES ===== */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#f8f8f8;padding:6px 8px;text-align:right;font-weight:500;color:#555;border-bottom:1px solid #e5e5e5;white-space:nowrap}
-td{padding:6px 8px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:var(--paper);padding:8px 10px;text-align:right;font-weight:700;color:var(--muted);border-bottom:2px solid var(--rule-strong);white-space:nowrap;font-size:11px;letter-spacing:.02em;text-transform:uppercase}
+td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:middle;font-variant-numeric:tabular-nums}
 tr:last-child td{border-bottom:none}
-.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px}
-.b-sell{background:#e8f4ff;color:#1a6fb5}
-.b-pay{background:#edfbf3;color:#27ae60}
-.b-buy{background:#fff0ef;color:#c0392b}
-.b-pres{background:#edfbf3;color:#27ae60}
-.b-abs{background:#fff0ef;color:#c0392b}
-.page-top{display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-.pname{font-size:17px;font-weight:600;cursor:pointer;border-bottom:2px dashed transparent}
-.pname:hover{border-color:#ddd}
-.pname-inp{font-size:17px;font-weight:600;border:none;border-bottom:2px solid #1a1a1a;outline:none;background:transparent;font-family:inherit;color:#1a1a1a;width:160px;display:none}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:8px 15px;border-radius:8px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+tr:hover td{background:rgba(156,122,60,.04)}
+
+/* ===== BADGES ===== */
+.badge{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:4px;letter-spacing:.02em}
+.b-sell{background:#E9F1FA;color:#1A5E96}
+.b-pay{background:var(--green-soft);color:var(--green)}
+.b-buy{background:var(--red-soft);color:var(--red)}
+.b-pres{background:var(--green-soft);color:var(--green)}
+.b-abs{background:var(--red-soft);color:var(--red)}
+
+/* ===== PAGE TOP ===== */
+.page-top{display:flex;align-items:center;gap:9px;margin-bottom:1.1rem;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:.7rem;position:relative}
+.page-top::after{content:'';position:absolute;bottom:-4px;right:0;width:46px;height:2px;background:var(--gold)}
+.pname{font-size:18px;font-weight:700;cursor:pointer;border-bottom:2px dashed transparent;font-family:'Zilla Slab',serif;color:var(--ink)}
+.pname:hover{border-color:var(--rule-strong)}
+.pname-inp{font-size:18px;font-weight:700;border:none;border-bottom:2px solid var(--ink);outline:none;background:transparent;font-family:'Zilla Slab',serif;color:var(--ink);width:165px;display:none}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 18px;border-radius:5px;font-size:12.5px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;border-bottom:2px solid var(--gold)}
 .toast.show{opacity:1}
-.ov-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:1rem}
-.ov-stat{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:.75rem;text-align:center}
-.ov-stat-label{font-size:11px;color:#888;margin-bottom:4px}
-.ov-stat-val{font-size:17px;font-weight:600}
-.sal-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:1rem}
-.ss{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:.7rem;text-align:center}
-.ss-label{font-size:10px;color:#888;margin-bottom:3px}
-.ss-val{font-size:16px;font-weight:600}
+
+/* ===== OVERVIEW STATS (customers landing) ===== */
+.ov-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.1rem}
+.ov-stat{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:.9rem .75rem;text-align:center;position:relative}
+.ov-stat::before{content:'';position:absolute;top:0;right:0;left:0;height:2px;background:var(--gold);border-radius:6px 6px 0 0}
+.ov-stat-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600}
+.ov-stat-val{font-size:18px;font-weight:700;font-family:'Zilla Slab',serif;font-variant-numeric:tabular-nums}
+
+/* ===== SALARY STATS ===== */
+.sal-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:1.1rem}
+.ss{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:.75rem .6rem;text-align:center}
+.ss-label{font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600}
+.ss-val{font-size:16px;font-weight:700;font-family:'Zilla Slab',serif;font-variant-numeric:tabular-nums}
+
+/* ===== MONTHLY TABS ===== */
 .month-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.9rem}
-.month-tab{padding:4px 10px;border-radius:6px;border:1px solid #ddd;cursor:pointer;font-size:11px;background:#fff;font-family:inherit}
-.month-tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.emp-card{background:#fff;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:.85rem;overflow:hidden}
-.emp-card-hd{display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;cursor:pointer;background:#fafafa;border-bottom:1px solid #f0f0f0;gap:6px}
-.emp-card-hd:hover{background:#f5f5f5}
-.emp-name{font-size:13px;font-weight:600}
-.emp-summary{font-size:11px;color:#888;margin-top:2px}
-.emp-body{padding:.75rem;display:none}
+.month-tab{padding:5px 12px;border-radius:4px;border:1px solid var(--rule-strong);cursor:pointer;font-size:11px;font-weight:600;background:#fff;font-family:inherit;color:var(--muted)}
+.month-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ===== EMPLOYEE CARDS ===== */
+.emp-card{background:var(--card);border:1px solid var(--rule);border-radius:6px;margin-bottom:.85rem;overflow:hidden}
+.emp-card-hd{display:flex;align-items:center;justify-content:space-between;padding:.75rem .95rem;cursor:pointer;background:var(--paper);border-bottom:1px solid var(--rule);gap:6px}
+.emp-card-hd:hover{background:#F3EEE3}
+.emp-name{font-size:13.5px;font-weight:700;color:var(--ink)}
+.emp-summary{font-size:11px;color:var(--muted);margin-top:3px}
+.emp-body{padding:.85rem;display:none}
 .emp-body.open{display:block}
-.emp-meta{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.75rem}
-.emp-meta span{background:#f5f5f5;padding:3px 8px;border-radius:6px;font-size:11px}
-.day-check-row{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #f5f5f5;flex-wrap:wrap}
+.emp-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.85rem}
+.emp-meta span{background:var(--paper);border:1px solid var(--rule);padding:4px 10px;border-radius:4px;font-size:11.5px;font-weight:600;color:var(--ink)}
+
+/* ===== DAILY CHECKLIST ===== */
+.day-check-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--rule);flex-wrap:wrap}
 .day-check-row:last-child{border-bottom:none}
-.day-label{font-size:12px;font-weight:500;min-width:80px}
-.chk{width:17px;height:17px;cursor:pointer;accent-color:#27ae60;flex-shrink:0}
-.ot-inp{width:75px!important;padding:3px 7px!important;font-size:11px!important}
+.day-label{font-size:12.5px;font-weight:600;min-width:84px;color:var(--ink)}
+.chk{width:17px;height:17px;cursor:pointer;accent-color:var(--green);flex-shrink:0}
+.ot-inp{width:78px!important;padding:4px 8px!important;font-size:11.5px!important}
 
-.ord-day-card{background:#fff;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:.85rem;overflow:hidden}
-.ord-day-hd{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#fafafa;border-bottom:1px solid #f0f0f0;cursor:pointer}
-.ord-day-hd:hover{background:#f5f5f5}
-.ord-day-title{font-size:14px;font-weight:600}
-.ord-day-sub{font-size:11px;color:#888;margin-top:2px}
-.ord-day-body{padding:.85rem;display:none}
+/* ===== ORDERS ===== */
+.ord-day-card{background:var(--card);border:1px solid var(--rule);border-radius:6px;margin-bottom:.85rem;overflow:hidden}
+.ord-day-hd{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;background:var(--paper);border-bottom:1px solid var(--rule);cursor:pointer}
+.ord-day-hd:hover{background:#F3EEE3}
+.ord-day-title{font-size:14px;font-weight:700;color:var(--ink);font-family:'Zilla Slab',serif}
+.ord-day-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.ord-day-body{padding:.9rem;display:none}
 .ord-day-body.open{display:block}
-.ord-item-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f5f5f5;flex-wrap:wrap}
+.ord-item-row{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--rule);flex-wrap:wrap}
 .ord-item-row:last-child{border-bottom:none}
-.ord-item-name{font-size:13px;font-weight:500;flex:1;min-width:80px}
-.ord-item-qty{font-size:12px;color:#555;background:#f5f5f5;padding:2px 8px;border-radius:5px;white-space:nowrap}
-.ord-item-note{font-size:11px;color:#888}
-.ord-check{width:18px;height:18px;cursor:pointer;accent-color:#27ae60;flex-shrink:0}
-.ord-done{text-decoration:line-through;color:#bbb}
-.ord-carried{background:#fff8e1;border-right:3px solid #f39c12}
-.ord-carried-badge{font-size:10px;background:#fff3cd;color:#856404;padding:1px 6px;border-radius:4px;white-space:nowrap}
+.ord-item-name{font-size:13px;font-weight:600;flex:1;min-width:80px;color:var(--ink)}
+.ord-item-qty{font-size:11.5px;color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:2px 9px;border-radius:4px;white-space:nowrap;font-weight:600}
+.ord-item-note{font-size:11px;color:var(--muted)}
+.ord-check{width:18px;height:18px;cursor:pointer;accent-color:var(--green);flex-shrink:0}
+.ord-done{text-decoration:line-through;color:var(--muted-2)}
+.ord-carried{background:var(--gold-soft);border-right:3px solid var(--gold);margin-right:-3px;padding-right:9px}
+.ord-carried-badge{font-size:10px;font-weight:700;background:#fff;color:var(--gold);border:1px solid var(--gold);padding:2px 7px;border-radius:4px;white-space:nowrap}
 
+/* ===== CUSTOMERS ERP MODULE ===== */
+.erp-wrap{padding:1.4rem 1.6rem}
+.erp-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.erp-search{flex:1;min-width:180px;position:relative}
+.erp-search input{padding-right:32px}
+.erp-search::before{content:'&#x1F50D;';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;opacity:.5;pointer-events:none}
+.erp-title-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
+.erp-title{font-family:'Zilla Slab',serif;font-size:20px;font-weight:700;color:var(--ink)}
+.erp-subtitle{font-size:12px;color:var(--muted)}
+.erp-table-card{background:var(--card);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.erp-table-card table{font-size:13px}
+.erp-table-card th{position:sticky;top:0;background:var(--paper);z-index:1}
+.erp-row{cursor:pointer;transition:background .1s}
+.erp-row:hover td{background:var(--gold-soft)}
+.erp-row td{font-weight:500}
+.erp-row .erp-name-cell{font-weight:700;color:var(--ink)}
+.erp-row .erp-bal-pos{color:var(--red);font-weight:700}
+.erp-row .erp-bal-neg{color:var(--green);font-weight:700}
+.erp-row .erp-bal-zero{color:var(--muted)}
+.erp-foot-row td{background:var(--ink);color:#fff;font-weight:700;border-bottom:none;position:sticky;bottom:0}
+.erp-foot-row td.foot-label{color:#C8C4B8;font-weight:600}
+.erp-empty-state{text-align:center;padding:3rem 1rem;color:var(--muted-2)}
+.erp-empty-state h3{font-size:15px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.erp-empty-state p{font-size:12px}
+.erp-back{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:1rem;width:fit-content}
+.erp-back:hover{color:var(--ink)}
+.erp-detail-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:.85rem;margin-bottom:1.1rem;position:relative}
+.erp-detail-header::after{content:'';position:absolute;bottom:-4px;right:0;width:46px;height:2px;background:var(--gold)}
+.erp-detail-name{font-family:'Zilla Slab',serif;font-size:21px;font-weight:700;color:var(--ink);cursor:pointer;border-bottom:2px dashed transparent}
+.erp-detail-name:hover{border-color:var(--rule-strong)}
+.erp-detail-name-inp{font-family:'Zilla Slab',serif;font-size:21px;font-weight:700;border:none;border-bottom:2px solid var(--ink);outline:none;background:transparent;color:var(--ink);width:200px;display:none}
+.erp-detail-actions{display:flex;gap:7px;flex-wrap:wrap}
+.erp-statline{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:1.1rem;padding:.85rem 1rem;background:var(--card);border:1px solid var(--rule);border-radius:6px}
+.erp-stat-item{display:flex;flex-direction:column;gap:2px}
+.erp-stat-item .lbl{font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.erp-stat-item .val{font-size:16.5px;font-weight:700;font-family:'Zilla Slab',serif;font-variant-numeric:tabular-nums}
+.erp-entry-toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:.85rem 1rem;background:var(--card);border:1px solid var(--rule);border-top:2px solid var(--gold);border-radius:6px;margin-bottom:1rem}
+.erp-ledger-table th:last-child,.erp-ledger-table td:last-child{text-align:left}
+.erp-running{font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* ===== INVOICE LINE-ITEM BUILDER ===== */
+.inv-builder{background:var(--card);border:1px solid var(--rule);border-top:2px solid var(--gold);border-radius:6px;padding:1rem;margin-bottom:1rem}
+.inv-lines-hd{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.02em;padding:0 2px 6px;text-transform:uppercase}
+.inv-line{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:center;padding:5px 0}
+.inv-line input{padding:6px 9px;font-size:12.5px}
+.inv-line-total{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);text-align:left;padding-left:4px}
+.inv-line-del{background:none;border:none;cursor:pointer;color:var(--muted-2);font-size:16px}
+.inv-line-del:hover{color:var(--red)}
+.inv-add-line{font-size:11.5px;font-weight:600;color:var(--gold);background:none;border:1px dashed var(--gold);border-radius:5px;padding:6px 12px;cursor:pointer;margin-top:6px}
+.inv-add-line:hover{background:var(--gold-soft)}
+.inv-builder-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--rule);flex-wrap:wrap;gap:10px}
+.inv-grand-total{font-size:17px;font-weight:700;font-family:'Zilla Slab',serif;color:var(--ink)}
+.entry-mode-tabs{display:flex;gap:0;margin-bottom:1rem;border-bottom:1px solid var(--rule)}
+.entry-mode-tab{padding:8px 18px;font-size:12.5px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer}
+.entry-mode-tab.active{color:var(--ink);border-bottom-color:var(--gold)}
+.inv-item-line{font-size:12px;color:var(--muted);padding:2px 0}
+
+/* ===== EXPENSES ===== */
+.exp-cat-tag{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:.01em}
+.exp-cat-salary{background:#E9F1FA;color:#1A5E96}
+.exp-cat-purchase{background:var(--red-soft);color:var(--red)}
+.exp-cat-maintenance{background:var(--gold-soft);color:var(--gold)}
+.exp-cat-other{background:#EFEDE8;color:var(--muted)}
+.exp-in-row td{color:var(--green)}
+.exp-out-row td{color:var(--red)}
+
+/* ===== PRINT ===== */
 @media print{
   .topnav,.sidebar,.mob-menu,.btn,.btn-sm,.btn-x,.btn-new,.pname-inp,.no-print{display:none!important}
-  .layout{padding-top:0}
-  .main{margin-right:0!important;padding:0}
-  .section,.page-view{display:block!important}
+  .layout,.section,.page-view,#main-wrap,.erp-wrap{display:none!important}
   body{background:#fff}
   .print-invoice{display:block!important}
 }
-.print-invoice{display:none;padding:1.5rem;font-size:13px}
-.print-invoice h2{text-align:center;margin-bottom:.5rem}
-.print-invoice .inv-meta{text-align:center;color:#666;margin-bottom:1rem;font-size:12px}
+.print-invoice{display:none;padding:1.5rem;font-size:13px;font-family:'Cairo',sans-serif}
+.print-invoice h2{text-align:center;margin-bottom:.5rem;font-family:'Zilla Slab',serif}
+.print-invoice .inv-meta{text-align:center;color:var(--muted);margin-bottom:1rem;font-size:12px}
+
+/* ===== MOBILE ===== */
 @media(max-width:700px){
   .mob-menu{display:block}
   .sidebar{transform:translateX(105%)}
   .sidebar.open{transform:translateX(0)}
-  .main{margin-right:0;padding:.6rem}
-  .topnav{padding:0 .5rem;gap:5px}
-  .topnav-logo{height:30px}
-  .topnav-tabs{gap:2px}
-  .tab-btn{padding:4px 7px;font-size:10px}
+  .main{margin-right:0;padding:.75rem}
+  .topnav{padding:0 .6rem;gap:6px;height:56px}
+  .topnav-logo{height:28px}
+  .topnav-tabs{gap:0}
+  .tab-btn{padding:6px 8px;font-size:10.5px}
   .metrics,.ov-stats{grid-template-columns:1fr 1fr}
   .metric:last-child,.ov-stat:last-child{grid-column:span 2}
   .sal-stats{grid-template-columns:1fr 1fr}
   .input-row{flex-direction:column;align-items:stretch}
   .input-row .btn{width:100%}
-  table{min-width:350px}
-  th,td{padding:5px 6px;font-size:11px;white-space:nowrap}
+  table{min-width:360px}
+  th,td{padding:6px 7px;font-size:11px;white-space:nowrap}
   .emp-card-hd{flex-wrap:nowrap}
-  .emp-name{font-size:12px}
-  .emp-summary{font-size:10px}
-  .emp-body{padding:.55rem}
+  .emp-name{font-size:12.5px}
+  .emp-summary{font-size:10.5px}
+  .emp-body{padding:.6rem}
+  .pname,.pname-inp{font-size:16px}
 }
+
 </style>
 </head>
 <body>
+<div id="login-screen" class="login-screen">
+  <form class="login-card" id="login-form" onsubmit="return false">
+    <img class="login-logo" src="" id="login-logo" alt="Trust Group"/>
+    <div class="login-title">تسجيل الدخول</div>
+    <div class="login-field">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="login-email" placeholder="example@email.com" autocomplete="username" required/>
+    </div>
+    <div class="login-field">
+      <label>كلمة المرور</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required/>
+    </div>
+    <div id="login-error" class="login-error"></div>
+    <button type="submit" class="btn btn-dark login-btn" id="login-submit-btn" onclick="doLogin()">دخول</button>
+  </form>
+</div>
+
+<div id="app-root" style="display:none">
 <div class="toast" id="toast"></div>
 <div id="print-area" class="print-invoice"></div>
 
@@ -165,8 +349,15 @@ tr:last-child td{border-bottom:none}
     <button class="tab-btn" onclick="switchSection('salaries',this)">المرتبات</button>
   </div>
   <button class="tab-btn" onclick="switchSection('orders',this)">الطلبات</button>
+    <button class="tab-btn" onclick="switchSection('expenses',this)">المصاريف</button>
+  <div id="user-badge" class="user-badge"></div>
   <button class="mob-menu" onclick="toggleSidebar()">&#9776;</button>
 </nav>
+<script>
+document.getElementById('login-logo').src = document.querySelector('.topnav-logo').src;
+document.getElementById('login-email').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();document.getElementById('login-password').focus()}});
+document.getElementById('login-password').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();window.doLogin&&window.doLogin()}});
+</script>
 
 <div class="layout">
   <div class="sidebar" id="sidebar">
@@ -177,14 +368,13 @@ tr:last-child td{border-bottom:none}
     <div class="pages-list" id="pages-list"><p style="font-size:12px;color:#bbb;text-align:center;padding:1rem">جار التحميل&#8230;</p></div>
     <div class="sidebar-ft" id="sync-status">&#128260; جار الاتصال&#8230;</div>
   </div>
-  <div class="main">
+  <div class="main" id="main-wrap">
     <div class="section active" id="section-debtors">
       <div id="debtors-welcome" class="welcome"><h2>&#128075; اختر حساباً أو أضف جديداً</h2></div>
       <div id="debtors-pages"></div>
     </div>
     <div class="section" id="section-customers">
-      <div id="customers-overview"></div>
-      <div id="customers-pages"></div>
+      <div id="customers-root"></div>
     </div>
     <div class="section" id="section-salaries">
       <div id="salaries-welcome" class="welcome"><h2>&#128075; اختر قسماً أو أضف موظفين</h2></div>
@@ -194,13 +384,77 @@ tr:last-child td{border-bottom:none}
     <div class="section" id="section-orders">
       <div id="orders-content"></div>
     </div>
+    <div class="section" id="section-expenses">
+      <div id="expenses-content"></div>
+    </div>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore,collection,doc,addDoc,setDoc,deleteDoc,onSnapshot,query,orderBy,serverTimestamp,writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-const db=getFirestore(initializeApp({apiKey:"AIzaSyCdT6hp9NQvCee1R-IkjCEE4mx3m483VDw",authDomain:"trust-group-3796d.firebaseapp.com",projectId:"trust-group-3796d",storageBucket:"trust-group-3796d.firebasestorage.app",messagingSenderId:"1096868997914",appId:"1:1096868997914:web:05bd68204a10749ebf5aa3"}));
+import { getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseApp=initializeApp({apiKey:"AIzaSyCdT6hp9NQvCee1R-IkjCEE4mx3m483VDw",authDomain:"trust-group-3796d.firebaseapp.com",projectId:"trust-group-3796d",storageBucket:"trust-group-3796d.firebasestorage.app",messagingSenderId:"1096868997914",appId:"1:1096868997914:web:05bd68204a10749ebf5aa3"});
+const db=getFirestore(firebaseApp);
+const auth=getAuth(firebaseApp);
+
+// ===== ROLE CONFIG =====
+// data_entry = full access. manager = read-only stats access.
+const USER_ROLES={
+  'trustgroup1010@gmail.com':{role:'data_entry',label:'مدخل البيانات'},
+  'ibrahimhanielaw@gmail.com':{role:'manager',label:'مدير'},
+  'm077ammmed@gmail.com':{role:'manager',label:'مدير'}
+};
+let currentUserRole=null;
+let currentUserEmail=null;
+
+window.doLogin=async function(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-password').value;
+  const errEl=document.getElementById('login-error');
+  const btn=document.getElementById('login-submit-btn');
+  errEl.textContent='';
+  if(!email||!pass){errEl.textContent='ادخل البريد الإلكتروني وكلمة المرور';return}
+  btn.disabled=true;btn.textContent='جاري الدخول...';
+  try{
+    await signInWithEmailAndPassword(auth,email,pass);
+  }catch(e){
+    errEl.textContent='بيانات الدخول غير صحيحة';
+    btn.disabled=false;btn.textContent='دخول';
+  }
+};
+
+window.doLogout=async function(){
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth,(user)=>{
+  const loginScreen=document.getElementById('login-screen');
+  const appRoot=document.getElementById('app-root');
+  const btn=document.getElementById('login-submit-btn');
+  if(user){
+    currentUserEmail=user.email;
+    const roleInfo=USER_ROLES[user.email]||{role:'manager',label:'مستخدم'};
+    currentUserRole=roleInfo.role;
+    loginScreen.style.display='none';
+    appRoot.style.display='block';
+    document.getElementById('user-badge').innerHTML=`<span class="role-tag">${roleInfo.label}</span><span>${user.email}</span><button class="logout-btn" onclick="doLogout()">خروج</button>`;
+    applyRolePermissions();
+  }else{
+    currentUserRole=null;currentUserEmail=null;
+    loginScreen.style.display='flex';
+    appRoot.style.display='none';
+    if(btn){btn.disabled=false;btn.textContent='دخول'}
+    document.getElementById('login-email').value='';
+    document.getElementById('login-password').value='';
+  }
+});
+
+function applyRolePermissions(){
+  const isManager=currentUserRole==='manager';
+  document.body.classList.toggle('role-manager',isManager);
+}
 
 let curSection='debtors',curPage={debtors:null,customers:null,salaries:null},pages={debtors:{},customers:{},salaries:{}},employees={},curMonth={};
 
@@ -216,9 +470,14 @@ window.switchSection=function(sec,btn){
   document.getElementById('section-'+sec).classList.add('active');
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('sb-label').textContent={debtors:'المدين',customers:'العملاء',salaries:'المرتبات',orders:'الطلبات'}[sec]||'';
-  document.getElementById('sb-add').textContent={debtors:'+ إضافة حساب',customers:'+ إضافة عميل',salaries:'+ إضافة قسم',orders:''}[sec]||'';document.getElementById('sb-add').style.display=sec==='orders'?'none':'block';
-  if(sec==='customers'){renderCustomersOverview();if(!curPage.customers)showCustOverview()}if(sec==='orders')renderOrdersPage();
+  document.getElementById('sb-label').textContent={debtors:'المدين',customers:'العملاء',salaries:'المرتبات',orders:'الطلبات',expenses:'المصاريف'}[sec]||'';
+  document.getElementById('sb-add').textContent={debtors:'+ إضافة حساب',customers:'+ إضافة عميل',salaries:'+ إضافة قسم',orders:''}[sec]||'';
+  document.getElementById('sb-add').style.display=(sec==='orders'||sec==='expenses'||sec==='customers')?'none':'block';
+  document.getElementById('sidebar').style.display=(sec==='customers')?'none':'flex';
+  document.getElementById('main-wrap').style.marginRight=(sec==='customers')?'0':'226px';
+  if(sec==='customers')renderCustomersERP();
+  if(sec==='orders')renderOrdersPage();
+  if(sec==='expenses')renderExpensesPage();
   renderSidebar();
 };
 window.sidebarAdd=function(){curSection==='salaries'?newSalaryDept():newPage(curSection)};
@@ -228,9 +487,9 @@ window.closeSidebar=function(){document.getElementById('sidebar').classList.remo
 function listenSection(sec){
   onSnapshot(query(collection(db,sec),orderBy('createdAt')),snap=>{
     const ids=snap.docs.map(d=>d.id);
-    Object.keys(pages[sec]).forEach(id=>{if(!ids.includes(id)){delete pages[sec][id];document.getElementById(sec+'-page-'+id)?.remove();if(curPage[sec]===id){curPage[sec]=null;if(sec==='customers')showCustOverview();else showWelcome(sec)}}});
+    Object.keys(pages[sec]).forEach(id=>{if(!ids.includes(id)){delete pages[sec][id];document.getElementById(sec+'-page-'+id)?.remove();if(curPage[sec]===id){curPage[sec]=null;if(sec==='customers'){curCustId=null;}else showWelcome(sec)}}});
     snap.docs.forEach(d=>{if(!pages[sec][d.id]){pages[sec][d.id]={id:d.id,name:d.data().name,entries:{}};listenEntries(sec,d.id)}else pages[sec][d.id].name=d.data().name});
-    renderSidebar();if(sec==='customers')renderCustomersOverview();
+    renderSidebar();if(sec==='customers'&&curSection==='customers')renderCustomersERP();
     document.getElementById('sync-status').textContent='&#x1F7E2; متصل';
   },()=>document.getElementById('sync-status').textContent='&#x1F534; خطأ');
 }
@@ -238,8 +497,9 @@ function listenEntries(sec,pid){
   onSnapshot(query(collection(db,sec,pid,'entries'),orderBy('createdAt')),snap=>{
     if(!pages[sec][pid])return;
     pages[sec][pid].entries={};snap.docs.forEach(d=>{pages[sec][pid].entries[d.id]={id:d.id,...d.data()}});
-    renderSidebar();if(sec==='customers')renderCustomersOverview();
-    renderPageContent(sec,pid);if(!curPage[sec]){if(sec==='customers')showCustOverview();else openPage(sec,pid)}
+    renderSidebar();
+    if(sec==='customers'){if(curSection==='customers')renderCustomersERP();}
+    else{renderPageContent(sec,pid);if(!curPage[sec])openPage(sec,pid)}
   });
 }
 function listenSalaryDepts(){
@@ -346,6 +606,267 @@ function calcBal(page,isSell){
   const pay=e.filter(x=>x.type==='pay').reduce((s,x)=>s+x.amount,0);
   return{sell,pay,bal:sell-pay};
 }
+
+// ========== CUSTOMERS — CLASSIC ERP MASTER/DETAIL ==========
+let curCustId=null;
+let custSearchTerm='';
+
+window.renderCustomersERP=function(){
+  if(curCustId&&pages.customers[curCustId]) renderCustomerDetail(curCustId);
+  else renderCustomerList();
+};
+
+function renderCustomerList(){
+  curCustId=null;
+  const root=document.getElementById('customers-root');if(!root)return;
+  const allArr=Object.values(pages.customers);
+  const arr=custSearchTerm
+    ? allArr.filter(p=>p.name.toLowerCase().includes(custSearchTerm.toLowerCase()))
+    : allArr;
+
+  let tSell=0,tPay=0,tBal=0;
+  allArr.forEach(p=>{const{sell,pay,bal}=calcBal(p,true);tSell+=sell;tPay+=pay;tBal+=bal});
+
+  const rows=arr.sort((a,b)=>a.name.localeCompare(b.name,'ar')).map(p=>{
+    const{sell,pay,bal}=calcBal(p,true);
+    const balCls=bal>0?'erp-bal-pos':bal<0?'erp-bal-neg':'erp-bal-zero';
+    const balTxt=bal===0?'مسوّى':fmt(Math.abs(bal));
+    return `<tr class="erp-row" onclick="openCustomer('${p.id}')">
+      <td class="erp-name-cell">${p.name}</td>
+      <td>${fmt(sell)}</td>
+      <td>${fmt(pay)}</td>
+      <td class="${balCls}">${balTxt}</td>
+      <td style="text-align:left"><button class="btn btn-sm" onclick="event.stopPropagation();deleteCustomer('${p.id}')">حذف</button></td>
+    </tr>`;
+  }).join('');
+
+  root.innerHTML=`
+    <div class="erp-wrap">
+      <div class="erp-title-row">
+        <div>
+          <div class="erp-title">سجل العملاء</div>
+          <div class="erp-subtitle">${allArr.length} عميل مسجّل</div>
+        </div>
+        <button class="btn btn-dark" onclick="newCustomer()">+ عميل جديد</button>
+      </div>
+
+      ${allArr.length?`<div class="erp-statline">
+        <div class="erp-stat-item"><span class="lbl">إجمالي المبيع</span><span class="val" style="color:#1A5E96">${fmt(tSell)}</span></div>
+        <div class="erp-stat-item"><span class="lbl">إجمالي السداد</span><span class="val" style="color:var(--green)">${fmt(tPay)}</span></div>
+        <div class="erp-stat-item"><span class="lbl">إجمالي المتبقي</span><span class="val" style="color:${tBal>0?'var(--red)':'var(--green)'}">${fmt(Math.abs(tBal))}</span></div>
+      </div>`:''}
+
+      <div class="erp-toolbar">
+        <div class="erp-search"><input type="text" id="cust-search" placeholder="بحث باسم العميل..." value="${custSearchTerm}" oninput="filterCustomers(this.value)"/></div>
+      </div>
+
+      ${allArr.length===0?`<div class="erp-empty-state"><h3>لا يوجد عملاء بعد</h3><p>اضغط "+ عميل جديد" لإضافة أول عميل</p></div>`:
+        arr.length===0?`<div class="erp-empty-state"><h3>لا نتائج</h3><p>جرّب اسماً آخر</p></div>`:
+        `<div class="erp-table-card"><div class="tbl-wrap"><table>
+          <thead><tr><th>اسم العميل</th><th>إجمالي البيع</th><th>إجمالي السداد</th><th>المتبقي</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div></div>`}
+    </div>`;
+}
+
+window.filterCustomers=function(val){
+  custSearchTerm=val;
+  renderCustomerList();
+  // restore focus + cursor position after re-render
+  const inp=document.getElementById('cust-search');
+  if(inp){inp.focus();inp.setSelectionRange(val.length,val.length)}
+};
+
+window.newCustomer=async function(){
+  const name=prompt('اسم العميل:');if(!name?.trim())return;
+  await addDoc(collection(db,'customers'),{name:name.trim(),createdAt:serverTimestamp()});toast('&#x2705; تمت الإضافة');
+};
+
+window.deleteCustomer=async function(id){
+  if(!confirm('حذف "'+pages.customers[id]?.name+'"؟'))return;
+  const b=writeBatch(db);
+  Object.keys(pages.customers[id].entries||{}).forEach(eid=>b.delete(doc(db,'customers',id,'entries',eid)));
+  b.delete(doc(db,'customers',id));await b.commit();toast('&#x1F5D1; تم الحذف');
+};
+
+window.openCustomer=function(id){curCustId=id;renderCustomerDetail(id)};
+window.backToCustomerList=function(){curCustId=null;renderCustomerList()};
+
+window.renameCustomer=function(id){
+  document.getElementById('cust-name-display').style.display='none';
+  const i=document.getElementById('cust-name-input');i.style.display='inline-block';i.focus();i.select();
+};
+window.finishRenameCustomer=async function(id){
+  const i=document.getElementById('cust-name-input');const n=i.value.trim();
+  if(n&&n!==pages.customers[id]?.name){await setDoc(doc(db,'customers',id),{name:n},{merge:true});toast('&#x270F;&#xFE0F; تم')}
+  renderCustomerDetail(id);
+};
+
+function renderCustomerDetail(id){
+  const page=pages.customers[id];if(!page){curCustId=null;renderCustomerList();return}
+  const root=document.getElementById('customers-root');if(!root)return;
+  const{sell,pay,bal}=calcBal(page,true);
+  const balColor=bal>0?'var(--red)':bal<0?'var(--green)':'var(--muted)';
+
+  const arr=Object.values(page.entries).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+  let running=0;
+  const rowsHTML=arr.map(e=>{
+    const isSell=e.type==='sell';
+    running += isSell?e.amount:-e.amount;
+    const detailHTML=(isSell&&e.items&&e.items.length)
+      ? e.items.map(it=>`<div class="inv-item-line">${it.name} &#x00D7;${it.qty} @ ${fmt(it.price)} = <strong>${fmt(it.total)}</strong></div>`).join('')
+      : (e.note||'—');
+    return `<tr>
+      <td>${e.time||''}</td>
+      <td><span class="badge ${isSell?'b-sell':'b-pay'}">${isSell?'بيع':'سداد'}</span></td>
+      <td>${detailHTML}</td>
+      <td>${isSell?fmt(e.amount):''}</td>
+      <td>${!isSell?fmt(e.amount):''}</td>
+      <td class="erp-running">${fmt(running)}</td>
+      <td style="text-align:left;white-space:nowrap">
+        ${isSell?`<button class="btn btn-sm" onclick="printSingleInvoice('${id}','${e.id}')" title="طباعة هذه الفاتورة">&#x1F5A8;</button>`:''}
+        <button class="btn btn-sm" onclick="deleteCustomerEntry('${id}','${e.id}')">&#x00D7;</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  root.innerHTML=`
+    <div class="erp-wrap">
+      <div class="erp-back" onclick="backToCustomerList()">&#x2192; رجوع لقائمة العملاء</div>
+
+      <div class="erp-detail-header">
+        <div>
+          <span class="erp-detail-name" id="cust-name-display" onclick="renameCustomer('${id}')">${page.name}</span>
+          <input class="erp-detail-name-inp" id="cust-name-input" onblur="finishRenameCustomer('${id}')" onkeydown="if(event.key==='Enter')finishRenameCustomer('${id}')"/>
+        </div>
+        <div class="erp-detail-actions">
+          <button class="btn btn-sm no-print" onclick="printCustomerInvoice('${id}')">&#x1F5A8; طباعة فاتورة</button>
+          <button class="btn btn-sm no-print" onclick="clearCustomerEntries('${id}')">&#x1F5D1; مسح السجل</button>
+        </div>
+      </div>
+
+      <div class="erp-statline">
+        <div class="erp-stat-item"><span class="lbl">إجمالي البيع</span><span class="val" style="color:#1A5E96">${fmt(sell)}</span></div>
+        <div class="erp-stat-item"><span class="lbl">إجمالي السداد</span><span class="val" style="color:var(--green)">${fmt(pay)}</span></div>
+        <div class="erp-stat-item"><span class="lbl">الرصيد الحالي</span><span class="val" style="color:${balColor}">${fmt(Math.abs(bal))} ${bal===0?'(مسوّى)':bal>0?'(له)':'(عليه)'}</span></div>
+      </div>
+
+      <div class="entry-mode-tabs">
+        <button class="entry-mode-tab ${custEntryMode==='sell'?'active':''}" onclick="setCustEntryMode('sell')">+ فاتورة بيع</button>
+        <button class="entry-mode-tab ${custEntryMode==='pay'?'active':''}" onclick="setCustEntryMode('pay')">+ سداد</button>
+      </div>
+
+      ${custEntryMode==='sell'?renderInvoiceBuilder(id):renderPayForm(id)}
+
+      ${arr.length===0?`<div class="erp-empty-state"><h3>لا يوجد معاملات بعد</h3><p>أضف أول عملية بيع أو سداد من الأعلى</p></div>`:
+      `<div class="erp-table-card"><div class="tbl-wrap"><table class="erp-ledger-table">
+        <thead><tr><th>التاريخ</th><th>النوع</th><th>التفاصيل</th><th>بيع</th><th>سداد</th><th>الرصيد</th><th></th></tr></thead>
+        <tbody>${rowsHTML}</tbody>
+      </table></div></div>`}
+    </div>`;
+}
+
+let custEntryMode='sell';
+let invLines=[{name:'',price:'',qty:''}];
+
+window.setCustEntryMode=function(mode){custEntryMode=mode;if(mode==='sell')invLines=[{name:'',price:'',qty:''}];renderCustomerDetail(curCustId)};
+
+function renderInvoiceBuilder(custId){
+  const linesHTML=invLines.map((ln,i)=>{
+    const total=(parseFloat(ln.price)||0)*(parseFloat(ln.qty)||0);
+    return `<div class="inv-line">
+      <input type="text" placeholder="اسم البند" value="${ln.name}" oninput="updateInvLine(${i},'name',this.value)"/>
+      <input type="number" placeholder="السعر" min="0" step="any" value="${ln.price}" oninput="updateInvLine(${i},'price',this.value)"/>
+      <input type="number" placeholder="الكمية" min="0" step="any" value="${ln.qty}" oninput="updateInvLine(${i},'qty',this.value)"/>
+      <span class="inv-line-total">${fmt(total)}</span>
+      <button class="inv-line-del" onclick="removeInvLine(${i})" title="حذف السطر">&#x00D7;</button>
+    </div>`;
+  }).join('');
+  const grandTotal=invLines.reduce((s,ln)=>s+(parseFloat(ln.price)||0)*(parseFloat(ln.qty)||0),0);
+  return `<div class="inv-builder">
+    <div class="inv-lines-hd"><span>البند</span><span>السعر</span><span>الكمية</span><span>الإجمالي</span><span></span></div>
+    ${linesHTML}
+    <button class="inv-add-line" onclick="addInvLine()">+ إضافة بند آخر</button>
+    <div class="inv-builder-foot">
+      <div class="inv-grand-total">الإجمالي الكلي: ${fmt(grandTotal)}</div>
+      <button class="btn" style="border-color:#1A5E96;color:#1A5E96" onclick="saveInvoice('${custId}')">حفظ فاتورة البيع</button>
+    </div>
+  </div>`;
+}
+
+function renderPayForm(custId){
+  return `<div class="erp-entry-toolbar">
+    <div style="flex:0 0 120px"><input type="number" id="cust-pay-amt" placeholder="المبلغ" min="0" step="any"/></div>
+    <div style="flex:1;min-width:140px"><input type="text" id="cust-pay-note" placeholder="ملاحظة (اختياري)"/></div>
+    <button class="btn btn-green" onclick="addCustomerPay('${custId}')">&#x2713; تسجيل السداد</button>
+  </div>`;
+}
+
+window.updateInvLine=function(i,field,val){invLines[i][field]=val;renderCustomerDetail(curCustId)};
+window.addInvLine=function(){invLines.push({name:'',price:'',qty:''});renderCustomerDetail(curCustId)};
+window.removeInvLine=function(i){if(invLines.length===1)return;invLines.splice(i,1);renderCustomerDetail(curCustId)};
+
+window.saveInvoice=async function(custId){
+  const items=invLines.filter(ln=>ln.name.trim()&&parseFloat(ln.price)>0&&parseFloat(ln.qty)>0)
+    .map(ln=>({name:ln.name.trim(),price:parseFloat(ln.price),qty:parseFloat(ln.qty),total:parseFloat(ln.price)*parseFloat(ln.qty)}));
+  if(!items.length){alert('أضف بند واحد على الأقل باسم وسعر وكمية صحيحة');return}
+  const grandTotal=items.reduce((s,it)=>s+it.total,0);
+  await addDoc(collection(db,'customers',custId,'entries'),{
+    type:'sell',amount:grandTotal,items,note:items.map(it=>it.name).join('، '),
+    time:new Date().toLocaleString('ar-EG',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}),
+    createdAt:serverTimestamp()});
+  invLines=[{name:'',price:'',qty:''}];
+  toast('&#x1F4B0; تم حفظ فاتورة البيع');
+};
+
+window.addCustomerPay=async function(custId){
+  const amt=parseFloat(document.getElementById('cust-pay-amt').value);
+  const note=document.getElementById('cust-pay-note').value.trim();
+  if(!amt||amt<=0){alert('ادخل مبلغ صحيح');return}
+  await addDoc(collection(db,'customers',custId,'entries'),{type:'pay',amount:amt,note,
+    time:new Date().toLocaleString('ar-EG',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}),
+    createdAt:serverTimestamp()});
+  toast('&#x2705; تم تسجيل السداد');
+};
+
+window.deleteCustomerEntry=async function(id,eid){await deleteDoc(doc(db,'customers',id,'entries',eid));toast('&#x1F5D1; تم')};
+
+window.clearCustomerEntries=async function(id){
+  if(!confirm('مسح كل سجل هذا العميل؟'))return;
+  const b=writeBatch(db);
+  Object.keys(pages.customers[id].entries||{}).forEach(eid=>b.delete(doc(db,'customers',id,'entries',eid)));
+  await b.commit();toast('&#x1F5D1; تم المسح');
+};
+
+window.printCustomerInvoice=function(id){
+  const page=pages.customers[id];if(!page)return;
+  const{sell,pay,bal}=calcBal(page,true);
+  const arr=Object.values(page.entries).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+  const rows=arr.map(e=>{const isS=e.type==='sell';
+    const detail=(isS&&e.items&&e.items.length)?e.items.map(it=>`${it.name} &#x00D7;${it.qty}`).join('، '):(e.note||'—');
+    return `<tr><td>${e.time||''}</td><td>${isS?'بيع':'سداد'}</td><td>${detail}</td><td>${isS?fmt(e.amount):''}</td><td>${!isS?fmt(e.amount):''}</td></tr>`;
+  }).join('');
+  const area=document.getElementById('print-area');
+  area.innerHTML=`<h2>كشف حساب &#x2014; ${page.name}</h2><div class="inv-meta">التاريخ: ${new Date().toLocaleDateString('ar-EG')}</div>
+    <table border="1" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:12px">
+      <thead><tr><th>التاريخ</th><th>النوع</th><th>التفاصيل</th><th>بيع</th><th>سداد</th></tr></thead><tbody>${rows}</tbody></table>
+    <div style="display:flex;gap:2rem;font-size:13px;font-weight:600"><span>إجمالي البيع: ${fmt(sell)}</span><span>إجمالي السداد: ${fmt(pay)}</span><span>المتبقي: ${fmt(bal)}</span></div>`;
+  area.style.display='block';setTimeout(()=>{window.print();area.style.display='none';area.innerHTML=''},300);
+};
+
+window.printSingleInvoice=function(custId,entryId){
+  const page=pages.customers[custId];if(!page)return;
+  const e=page.entries[entryId];if(!e)return;
+  const items=e.items||[];
+  const rows=items.map(it=>`<tr><td>${it.name}</td><td>${fmt(it.price)}</td><td>${it.qty}</td><td>${fmt(it.total)}</td></tr>`).join('');
+  const area=document.getElementById('print-area');
+  area.innerHTML=`<h2>فاتورة بيع</h2>
+    <div class="inv-meta">العميل: ${page.name} &#x2014; التاريخ: ${e.time||''}</div>
+    <table border="1" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:12px">
+      <thead><tr><th>البند</th><th>السعر</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${rows}</tbody></table>
+    <div style="text-align:left;font-size:15px;font-weight:700">الإجمالي الكلي: ${fmt(e.amount)}</div>`;
+  area.style.display='block';setTimeout(()=>{window.print();area.style.display='none';area.innerHTML=''},300);
+};
 function calcEmpMonth(emp,month){
   const att=Object.values(emp.attendance||{}).filter(a=>a.date?.startsWith(month));
   const pDays=att.filter(a=>a.status==='present').length;
@@ -365,23 +886,9 @@ function calcEmpAll(emp){
 }
 
 function showWelcome(sec){document.getElementById(sec+'-welcome').style.display='flex'}
-function showCustOverview(){
-  document.querySelectorAll('#customers-pages .page-view').forEach(e=>e.classList.remove('active'));
-  curPage.customers=null;renderCustomersOverview();renderSidebar();
-}
-function renderCustomersOverview(){
-  const el=document.getElementById('customers-overview');const arr=Object.values(pages.customers);
-  if(!arr.length){el.innerHTML='<div class="welcome"><h2>&#128075; لا يوجد عملاء بعد</h2></div>';return}
-  let tSell=0,tPay=0,tBal=0;
-  arr.forEach(p=>{const{sell,pay,bal}=calcBal(p,true);tSell+=sell;tPay+=pay;tBal+=bal});
-  el.innerHTML=`<div class="ov-stats">
-    <div class="ov-stat"><div class="ov-stat-label">&#x1F4B0; إجمالي المبيع</div><div class="ov-stat-val" style="color:#1a6fb5">${fmt(tSell)}</div></div>
-    <div class="ov-stat"><div class="ov-stat-label">&#x2705; إجمالي السداد</div><div class="ov-stat-val" style="color:#27ae60">${fmt(tPay)}</div></div>
-    <div class="ov-stat"><div class="ov-stat-label">&#x1F4CA; إجمالي المتبقي</div><div class="ov-stat-val" style="color:#c0392b">${fmt(tBal)}</div></div>
-  </div>`;
-}
 function renderSidebar(){
   const list=document.getElementById('pages-list');const sec=curSection;
+  if(sec==='customers')return;
   if(sec==='salaries'){
     const depts=Object.values(pages.salaries);
     if(!depts.length){list.innerHTML='<p style="font-size:12px;color:#bbb;text-align:center;padding:1rem">لا يوجد أقسام</p>';return}
@@ -392,8 +899,7 @@ function renderSidebar(){
   }
   const arr=Object.values(pages[sec]);
   if(!arr.length){list.innerHTML='<p style="font-size:12px;color:#bbb;text-align:center;padding:1rem">لا يوجد بيانات</p>';return}
-  const isSell=sec==='customers';
-  list.innerHTML=arr.map(p=>{const{bal}=calcBal(p,isSell);const bc=bal>0?'pos':bal<0?'neg':'';const bt=bal!==0?(bal>0?'متبقي: ':'زيادة: ')+fmt(Math.abs(bal)):'مسوّى';
+  list.innerHTML=arr.map(p=>{const{bal}=calcBal(p,false);const bc=bal>0?'pos':bal<0?'neg':'';const bt=bal!==0?(bal>0?'متبقي: ':'زيادة: ')+fmt(Math.abs(bal)):'مسوّى';
     return `<div class="pi ${p.id===curPage[sec]?'active':''}" onclick="openPage('${sec}','${p.id}')">
       <div class="pi-left"><span class="pi-name">${p.name}</span><span class="pi-sub ${bc}">${bt}</span></div>
       <button class="btn-x" onclick="event.stopPropagation();deletePage('${sec}','${p.id}')">&#x00D7;</button>
@@ -402,8 +908,7 @@ function renderSidebar(){
 }
 window.openPage=function(sec,id){
   curPage[sec]=id;if(sec!==curSection)return;
-  if(sec==='customers')document.getElementById('customers-overview').innerHTML='';
-  else document.getElementById(sec+'-welcome').style.display='none';
+  document.getElementById(sec+'-welcome').style.display='none';
   document.querySelectorAll('#section-'+sec+' .page-view').forEach(e=>e.classList.remove('active'));
   let el=document.getElementById(sec+'-page-'+id);
   if(!el){sec==='salaries'?renderSalaryPage(id):renderPageContent(sec,id);el=document.getElementById(sec+'-page-'+id)}
@@ -429,12 +934,12 @@ function renderPageContent(sec,pid){
   let el=document.getElementById(sec+'-page-'+pid);
   if(!el){el=document.createElement('div');el.className='page-view'+(pid===curPage[sec]?' active':'');el.id=sec+'-page-'+pid;document.getElementById(sec+'-pages').appendChild(el)}
   const isSell=sec==='customers';const{sell,pay,bal}=calcBal(page,isSell);
-  const bc=bal>0?'#c0392b':bal<0?'#27ae60':'#1a1a1a';
-  const sLabel=isSell?'بيع':'شراء';const sColor=isSell?'#1a6fb5':'#c0392b';const sBadge=isSell?'b-sell':'b-buy';
+  const bc=bal>0?'#A8222F':bal<0?'#1E6B4E':'#1a1a1a';
+  const sLabel=isSell?'بيع':'شراء';const sColor=isSell?'#1A5E96':'#A8222F';const sBadge=isSell?'b-sell':'b-buy';
   const arr=Object.values(page.entries).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   const rows=arr.map(e=>{const isS=e.type==='sell'||e.type==='buy';
     return `<tr><td><span class="badge ${isS?sBadge:'b-pay'}">${isS?sLabel:'سداد'}</span></td><td>${e.note||'—'}</td><td>${e.time||''}</td>
-      <td style="font-weight:600;color:${isS?sColor:'#27ae60'}">${isS?'+':'-'}${fmt(e.amount)}</td>
+      <td style="font-weight:600;color:${isS?sColor:'#1E6B4E'}">${isS?'+':'-'}${fmt(e.amount)}</td>
       <td><button class="btn btn-sm" onclick="deleteEntry('${sec}','${pid}','${e.id}')">&#x00D7;</button></td></tr>`;
   }).join('');
   el.innerHTML=`<div class="page-top">
@@ -442,7 +947,7 @@ function renderPageContent(sec,pid){
     <input class="pname-inp" id="pi-${sec}${pid}" onblur="finishRename('${sec}','${pid}')" onkeydown="if(event.key==='Enter')finishRename('${sec}','${pid}')"/>
     <span style="font-size:11px;color:#bbb">(اضغط الاسم للتعديل)</span>
     <button class="btn btn-sm no-print" onclick="printInvoice('${sec}','${pid}')" style="margin-right:auto">&#x1F5A8; طباعة فاتورة</button>
-    ${isSell?`<button class="btn btn-sm no-print" onclick="showCustOverview()">&#x2190; الإجمالي</button>`:''}
+    
   </div>
   <div class="metrics">
     <div class="metric"><div class="metric-label">إجمالي ${sLabel}</div><div class="metric-val" style="color:${sColor}">${fmt(sell)}</div></div>
@@ -480,7 +985,7 @@ function renderSalaryPage(deptId){
   empArr.forEach(emp=>{const{net,totalAdv,pDays}=calcEmpMonth(emp,selMonth);mNet+=net;mAdv+=totalAdv;mDays+=pDays});
   const monthTabsHTML=monthsList.map(m=>`<button class="month-tab ${m===selMonth?'active':''}" onclick="selectMonth('${deptId}','${m}')">${m}</button>`).join('');
   const monthlyRows=empArr.map(emp=>{const{pDays,totalOT,base,otPay,totalAdv,net}=calcEmpMonth(emp,selMonth);
-    return `<tr><td>${emp.name}</td><td>${pDays}</td><td>${fmt(emp.dailyRate)}</td><td>${fmt(base)}</td><td>${totalOT}س(+${fmt(otPay)})</td><td style="color:#c0392b">${fmt(totalAdv)}</td><td style="font-weight:600;color:${net>=0?'#27ae60':'#c0392b'}">${fmt(net)}</td></tr>`;
+    return `<tr><td>${emp.name}</td><td>${pDays}</td><td>${fmt(emp.dailyRate)}</td><td>${fmt(base)}</td><td>${totalOT}س(+${fmt(otPay)})</td><td style="color:#A8222F">${fmt(totalAdv)}</td><td style="font-weight:600;color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</td></tr>`;
   }).join('');
   const daysInMonth=getDaysInMonth(selMonth);
   const empsHTML=empArr.map(emp=>{
@@ -500,7 +1005,7 @@ function renderSalaryPage(deptId){
     return `<div class="emp-card">
       <div class="emp-card-hd" onclick="toggleEmpCard('${emp.id}')">
         <div style="flex:1;min-width:0"><div class="emp-name">&#x1F464; ${emp.name}</div>
-          <div class="emp-summary">يومية: ${fmt(emp.dailyRate)} | حضور: ${pDays}ي | صافي ${selMonth}: <strong style="color:${net>=0?'#27ae60':'#c0392b'}">${fmt(net)}</strong></div>
+          <div class="emp-summary">يومية: ${fmt(emp.dailyRate)} | حضور: ${pDays}ي | صافي ${selMonth}: <strong style="color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</strong></div>
         </div>
         <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
           <button class="btn btn-sm" onclick="event.stopPropagation();deleteEmployee('${deptId}','${emp.id}')">حذف</button>
@@ -511,8 +1016,8 @@ function renderSalaryPage(deptId){
         <div class="emp-meta">
           <span>اليومية: ${fmt(emp.dailyRate)}</span><span>OT/ساعة: ${fmt(emp.overtimeRate)}</span>
           <span>حضور(${selMonth}): ${pDays}ي</span><span>OT: ${totalOT}س(+${fmt(otPay)})</span>
-          <span style="color:#c0392b">سلف: ${fmt(totalAdv)}</span>
-          <span style="font-weight:600;color:${net>=0?'#27ae60':'#c0392b'}">صافي: ${fmt(net)}</span>
+          <span style="color:#A8222F">سلف: ${fmt(totalAdv)}</span>
+          <span style="font-weight:600;color:${net>=0?'#1E6B4E':'#A8222F'}">صافي: ${fmt(net)}</span>
         </div>
         <div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4C5; الحضور اليومي &#x2014; ${selMonth}</div>${dayRows}</div>
         <div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4B8; إضافة سلفة</div>
@@ -534,9 +1039,9 @@ function renderSalaryPage(deptId){
     </div>
     ${empArr.length?`<div class="sal-stats">
       <div class="ss"><div class="ss-label">&#x1F464;&#x200D;&#x1F464; الموظفين</div><div class="ss-val">${empArr.length}</div></div>
-      <div class="ss"><div class="ss-label">&#x1F4B0; إجمالي المرتبات</div><div class="ss-val" style="color:#1a6fb5">${fmt(tBase)}</div></div>
-      <div class="ss"><div class="ss-label">&#x1F4B8; إجمالي السلف</div><div class="ss-val" style="color:#c0392b">${fmt(tAdv)}</div></div>
-      <div class="ss"><div class="ss-label">&#x2705; إجمالي المستحق</div><div class="ss-val" style="color:#27ae60">${fmt(tNet)}</div></div>
+      <div class="ss"><div class="ss-label">&#x1F4B0; إجمالي المرتبات</div><div class="ss-val" style="color:#1A5E96">${fmt(tBase)}</div></div>
+      <div class="ss"><div class="ss-label">&#x1F4B8; إجمالي السلف</div><div class="ss-val" style="color:#A8222F">${fmt(tAdv)}</div></div>
+      <div class="ss"><div class="ss-label">&#x2705; إجمالي المستحق</div><div class="ss-val" style="color:#1E6B4E">${fmt(tNet)}</div></div>
     </div>`:''}
     ${monthsList.length?`<div class="card" style="margin-bottom:.85rem"><div class="card-title">&#x1F4CA; إحصائية شهرية</div>
       <div class="month-tabs">${monthTabsHTML}</div>
@@ -612,7 +1117,7 @@ window.renderOrdersPage=function(){
       ${i.note?`<span class="ord-item-note">${i.note}</span>`:''}
       <span class="ord-carried-badge">من ${i.carriedFrom}</span>
       <button class="btn btn-sm" onclick="copyOrderToToday('${i.id}','${todayStr}')">نسخ لليوم</button>
-      <button class="btn btn-sm" style="color:#e74c3c" onclick="deleteOrder('${i.id}')">&#x00D7;</button>
+      <button class="btn btn-sm" style="color:#A8222F" onclick="deleteOrder('${i.id}')">&#x00D7;</button>
     </div>`).join('')}
   </div>`:'';
 
@@ -630,7 +1135,7 @@ window.renderOrdersPage=function(){
         <span class="ord-item-qty">&#x00D7;${i.qty||1}</span>
         ${i.note?`<span class="ord-item-note">${i.note}</span>`:''}
         ${!i.done&&!isToday?`<span class="ord-carried-badge">مرحّل</span>`:''}
-        ${isToday?`<button class="btn btn-sm" style="color:#e74c3c" onclick="deleteOrder('${i.id}')">&#x00D7;</button>`:''}
+        ${isToday?`<button class="btn btn-sm" style="color:#A8222F" onclick="deleteOrder('${i.id}')">&#x00D7;</button>`:''}
       </div>`).join('');
     return `<div class="ord-day-card">
       <div class="ord-day-hd" onclick="toggleDayCard('${date}')">
@@ -699,8 +1204,183 @@ window.copyDayOrders=async function(fromDate,toDate){
   }
   toast('&#x1F4CB; تم نسخ '+undoneItems.length+' طلب');
 };
+
+// ========== EXPENSES ==========
+let expensesData = {}; // id -> entry
+let curExpMonth = null;
+
+const EXP_CATEGORIES = {
+  salary:{label:'رواتب',cls:'exp-cat-salary'},
+  purchase:{label:'مشتريات',cls:'exp-cat-purchase'},
+  maintenance:{label:'صيانة',cls:'exp-cat-maintenance'},
+  other:{label:'غيرها',cls:'exp-cat-other'}
+};
+
+function listenExpenses(){
+  onSnapshot(query(collection(db,'expenses'),orderBy('createdAt','desc')),snap=>{
+    expensesData={};
+    snap.docs.forEach(d=>{expensesData[d.id]={id:d.id,...d.data()}});
+    if(curSection==='expenses')renderExpensesPage();
+  });
+}
+
+function getExpenseMonths(){
+  const s=new Set();
+  Object.values(expensesData).forEach(e=>{if(e.isoDate)s.add(e.isoDate.slice(0,7))});
+  s.add(today().slice(0,7));
+  return [...s].sort().reverse();
+}
+
+// Safe balance is calculated across ALL entries (lifetime), not just selected month —
+// it represents the real current cash balance in the safe.
+function calcSafeBalance(){
+  const all=Object.values(expensesData);
+  const totalIn=all.filter(e=>e.type==='in').reduce((s,e)=>s+e.amount,0);
+  const totalOutFromSafe=all.filter(e=>e.type==='out'&&e.source==='safe').reduce((s,e)=>s+e.amount,0);
+  return totalIn-totalOutFromSafe;
+}
+
+window.toggleExpSourceVisibility=function(){
+  const type=document.getElementById('exp-type').value;
+  const sourceWrap=document.getElementById('exp-source-wrap');
+  sourceWrap.style.display=(type==='out')?'block':'none';
+};
+
+window.addExpense=async function(){
+  const type=document.getElementById('exp-type').value;
+  const cat=document.getElementById('exp-cat').value;
+  const source=type==='out'?document.getElementById('exp-source').value:null;
+  const amt=parseFloat(document.getElementById('exp-amt').value);
+  const note=document.getElementById('exp-note').value.trim();
+  if(!amt||amt<=0){alert('ادخل مبلغ صحيح');return}
+  if(type==='out'&&source==='safe'){
+    const safeBal=calcSafeBalance();
+    if(amt>safeBal){ if(!confirm('المبلغ أكبر من رصيد الخزنة الحالي ('+fmt(safeBal)+'). هل تريد الاستمرار؟'))return; }
+  }
+  const now=new Date();
+  const payload={
+    type,category:cat,amount:amt,note,
+    isoDate:now.toISOString().slice(0,10),
+    date:now.toLocaleDateString('ar-EG'),
+    time:now.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}),
+    createdAt:serverTimestamp()
+  };
+  if(type==='out')payload.source=source;
+  await addDoc(collection(db,'expenses'),payload);
+  document.getElementById('exp-amt').value='';document.getElementById('exp-note').value='';
+  toast(type==='in'?'&#x1F4B0; تم تسجيل المستلم':(source==='safe'?'&#x1F510; تم الصرف من الخزنة':'&#x1F4B8; تم تسجيل المصروف العام'));
+};
+
+window.deleteExpense=async function(id){
+  await deleteDoc(doc(db,'expenses',id));toast('&#x1F5D1; تم الحذف');
+};
+
+window.selectExpMonth=function(month){curExpMonth=month;renderExpensesPage()};
+
+window.renderExpensesPage=function(){
+  const el=document.getElementById('expenses-content');if(!el)return;
+  const monthsList=getExpenseMonths();
+  const selMonth=curExpMonth||monthsList[0];
+
+  const allEntries=Object.values(expensesData);
+  const monthEntries=allEntries.filter(e=>(e.isoDate||'').startsWith(selMonth));
+
+  const mIn=monthEntries.filter(e=>e.type==='in').reduce((s,e)=>s+e.amount,0);
+  const mOutSafe=monthEntries.filter(e=>e.type==='out'&&e.source==='safe').reduce((s,e)=>s+e.amount,0);
+  const mOutGeneral=monthEntries.filter(e=>e.type==='out'&&e.source==='general').reduce((s,e)=>s+e.amount,0);
+  const mOutTotal=mOutSafe+mOutGeneral;
+  const mBal=mIn-mOutSafe; // safe net change this month
+
+  const safeBalance=calcSafeBalance(); // real lifetime safe balance
+
+  // category breakdown across BOTH sources combined
+  const catTotals={};
+  monthEntries.filter(e=>e.type==='out').forEach(e=>{
+    catTotals[e.category]=(catTotals[e.category]||0)+e.amount;
+  });
+
+  const monthTabsHTML=monthsList.map(m=>`<button class="month-tab ${m===selMonth?'active':''}" onclick="selectExpMonth('${m}')">${m}</button>`).join('');
+
+  const catBreakdownHTML=Object.keys(EXP_CATEGORIES).map(catKey=>{
+    const cat=EXP_CATEGORIES[catKey];
+    const val=catTotals[catKey]||0;
+    return `<div class="metric"><div class="metric-label">${cat.label}</div><div class="metric-val red">${fmt(val)}</div></div>`;
+  }).join('');
+
+  const rows=monthEntries.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(e=>{
+    const isIn=e.type==='in';
+    const cat=EXP_CATEGORIES[e.category]||EXP_CATEGORIES.other;
+    const sourceTag=isIn?'<span class="exp-cat-tag" style="background:#EAF4EE;color:#1E6B4E">خزنة</span>':
+      (e.source==='safe'?'<span class="exp-cat-tag" style="background:#F6EFE1;color:#9C7A3C">من الخزنة</span>':'<span class="exp-cat-tag" style="background:#EFEDE8;color:#6F6A60">عام</span>');
+    return `<tr class="${isIn?'exp-in-row':'exp-out-row'}">
+      <td><span class="badge ${isIn?'b-pay':'b-buy'}">${isIn?'مستلم':'مصروف'}</span></td>
+      <td>${sourceTag}</td>
+      <td><span class="exp-cat-tag ${cat.cls}">${cat.label}</span></td>
+      <td>${e.note||'—'}</td>
+      <td>${e.date} ${e.time||''}</td>
+      <td style="font-weight:600">${isIn?'+':'-'}${fmt(e.amount)}</td>
+      <td><button class="btn btn-sm" onclick="deleteExpense('${e.id}')">&#x00D7;</button></td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML=`
+    <div class="card" style="margin-bottom:.85rem;border-top:2px solid var(--gold)">
+      <div class="card-title">&#x1F510; رصيد الخزنة الحالي</div>
+      <div style="font-size:26px;font-weight:700;font-family:'Zilla Slab',serif;color:${safeBalance>=0?'var(--ink)':'var(--red)'}">${fmt(safeBalance)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">إجمالي كل المستلم (إيداعات الخزنة) ناقص كل المصروف الذي تم صرفه من الخزنة — منذ البداية</div>
+    </div>
+
+    <div class="card" style="margin-bottom:.85rem">
+      <div class="card-title">&#x1F4B0; تسجيل عملية</div>
+      <div class="input-row">
+        <select id="exp-type" style="flex:0 0 110px" onchange="toggleExpSourceVisibility()">
+          <option value="in">&#x2B07; مستلم (للخزنة)</option>
+          <option value="out">&#x2B06; مصروف</option>
+        </select>
+        <select id="exp-cat" style="flex:0 0 120px">
+          ${Object.entries(EXP_CATEGORIES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}
+        </select>
+        <div style="flex:0 0 110px"><input type="number" id="exp-amt" placeholder="المبلغ" min="0"/></div>
+        <div style="flex:1;min-width:90px"><input type="text" id="exp-note" placeholder="ملاحظة (اختياري)"/></div>
+        <button class="btn btn-dark" onclick="addExpense()">+ تسجيل</button>
+      </div>
+      <div id="exp-source-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--rule)">
+        <label style="font-size:11.5px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">مصدر المصروف</label>
+        <div class="input-row">
+          <select id="exp-source" style="flex:0 0 200px">
+            <option value="safe">&#x1F510; من الخزنة — يخصم من الرصيد</option>
+            <option value="general">&#x1F4C4; مصروف عام — تسجيل فقط</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:.85rem">
+      <div class="card-title">&#x1F4CA; إحصائية شهرية (${selMonth})</div>
+      <div class="month-tabs">${monthTabsHTML}</div>
+      <div class="metrics" style="margin-bottom:.6rem">
+        <div class="metric"><div class="metric-label">مستلم للخزنة</div><div class="metric-val green">${fmt(mIn)}</div></div>
+        <div class="metric"><div class="metric-label">مصروف من الخزنة</div><div class="metric-val red">${fmt(mOutSafe)}</div></div>
+        <div class="metric"><div class="metric-label">مصروف عام</div><div class="metric-val red">${fmt(mOutGeneral)}</div></div>
+      </div>
+      <div class="metrics" style="margin-bottom:.8rem">
+        <div class="metric"><div class="metric-label">إجمالي المصروف (الكل)</div><div class="metric-val red">${fmt(mOutTotal)}</div></div>
+        <div class="metric"><div class="metric-label">صافي حركة الخزنة هذا الشهر</div><div class="metric-val" style="color:${mBal>=0?'#1E6B4E':'#A8222F'}">${fmt(mBal)}</div></div>
+      </div>
+      <div class="card-title" style="margin-bottom:8px">تفصيل المصروفات بالتصنيف (من الخزنة + عام)</div>
+      <div class="metrics">${catBreakdownHTML}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">سجل العمليات (${selMonth})</div>
+      ${monthEntries.length===0?'<p style="text-align:center;color:#bbb;padding:1rem;font-size:12px">لا يوجد عمليات في هذا الشهر</p>':
+        '<div class="tbl-wrap"><table><thead><tr><th>النوع</th><th>المصدر</th><th>التصنيف</th><th>ملاحظة</th><th>التاريخ</th><th>المبلغ</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'}
+    </div>`;
+  toggleExpSourceVisibility();
+};
 listenSection('debtors');listenSection('customers');listenSalaryDepts();
-listenOrders();
+listenOrders();listenExpenses();
 </script>
+</div>
 </body>
 </html>
