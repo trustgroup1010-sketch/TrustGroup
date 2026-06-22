@@ -298,8 +298,10 @@ tr:hover td{background:rgba(156,122,60,.04)}
   .mob-menu{display:block}
   .sidebar{transform:translateX(105%)}
   .sidebar.open{transform:translateX(0)}
-  .main{margin-right:0;padding:.75rem}
+  .main{margin-right:0!important;padding:.75rem}
   .topnav{padding:0 .6rem;gap:6px;height:56px}
+  .layout{padding-top:56px}
+  .sidebar{top:56px;height:calc(100vh - 56px)}
   .topnav-logo{height:28px}
   .topnav-tabs{gap:0}
   .tab-btn{padding:6px 8px;font-size:10.5px}
@@ -308,6 +310,7 @@ tr:hover td{background:rgba(156,122,60,.04)}
   .sal-stats{grid-template-columns:1fr 1fr}
   .input-row{flex-direction:column;align-items:stretch}
   .input-row .btn{width:100%}
+  .input-row>div{flex:1 1 auto!important;width:100%}
   table{min-width:360px}
   th,td{padding:6px 7px;font-size:11px;white-space:nowrap}
   .emp-card-hd{flex-wrap:nowrap}
@@ -315,6 +318,55 @@ tr:hover td{background:rgba(156,122,60,.04)}
   .emp-summary{font-size:10.5px}
   .emp-body{padding:.6rem}
   .pname,.pname-inp{font-size:16px}
+
+  /* login screen */
+  .login-card{padding:1.6rem 1.3rem;max-width:100%}
+  .login-logo{max-width:130px}
+
+  /* customers ERP module */
+  .erp-wrap{padding:.85rem .7rem}
+  .erp-title-row{flex-direction:column;align-items:stretch;gap:10px}
+  .erp-title-row .btn{width:100%}
+  .erp-title{font-size:17px}
+  .erp-statline{gap:12px;padding:.7rem .8rem}
+  .erp-stat-item .val{font-size:14px}
+  .erp-toolbar{flex-direction:column;align-items:stretch}
+  .erp-search{min-width:0}
+  .erp-table-card table{min-width:480px}
+  .erp-detail-header{flex-direction:column;align-items:stretch}
+  .erp-detail-actions{width:100%}
+  .erp-detail-actions .btn{flex:1}
+  .erp-detail-name,.erp-detail-name-inp{font-size:17px;width:100%}
+  .erp-entry-toolbar{flex-direction:column;align-items:stretch;padding:.75rem}
+  .erp-entry-toolbar>div{flex:1 1 auto!important;width:100%}
+  .erp-entry-toolbar .btn{width:100%}
+  .erp-ledger-table{min-width:560px}
+
+  /* entry mode tabs */
+  .entry-mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .entry-mode-tab{padding:8px 12px;font-size:11.5px;white-space:nowrap}
+
+  /* invoice line builder — collapse grid to stacked card per line */
+  .inv-builder{padding:.8rem .7rem}
+  .inv-lines-hd{display:none}
+  .inv-line{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"name name" "price qty" "total del";gap:6px;padding:.6rem;background:var(--paper);border:1px solid var(--rule);border-radius:6px;margin-bottom:6px}
+  .inv-line input:nth-of-type(1){grid-area:name}
+  .inv-line input:nth-of-type(2){grid-area:price}
+  .inv-line input:nth-of-type(3){grid-area:qty}
+  .inv-line-total{grid-area:total;text-align:right;font-size:13px}
+  .inv-line-del{grid-area:del;justify-self:left;font-size:18px}
+  .inv-add-line{width:100%}
+  .inv-builder-foot{flex-direction:column;align-items:stretch;gap:8px}
+  .inv-builder-foot .btn{width:100%}
+  .inv-grand-total{text-align:center}
+
+  /* user badge collapses, show role only via topnav title area on mobile */
+  .user-badge{display:none}
+}
+
+@media(max-width:420px){
+  .topnav-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;justify-content:flex-start}
+  .tab-btn{flex-shrink:0}
 }
 
 </style>
