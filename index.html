@@ -58,7 +58,8 @@ body.role-manager select,
 body.role-manager .btn:not(.btn-sm):not(.month-tab),
 body.role-manager .btn-sm:not([onclick*="print"]):not([onclick*="Month"]):not([onclick*="toggle"]):not([onclick*="open"]):not([onclick*="back"]),
 body.role-manager .day-check-row .chk,
-body.role-manager .ot-inp{display:none!important}
+body.role-manager .ot-inp,
+body.role-manager [onclick*="toggleRateEdit"]{display:none!important}
 body.role-manager .erp-row{cursor:default}
 body.role-manager .pname,body.role-manager .erp-detail-name{cursor:default;pointer-events:none}
 
@@ -190,6 +191,7 @@ tr:hover td{background:rgba(156,122,60,.04)}
 .emp-body.open{display:block}
 .emp-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.85rem}
 .emp-meta span{background:var(--paper);border:1px solid var(--rule);padding:4px 10px;border-radius:4px;font-size:11.5px;font-weight:600;color:var(--ink)}
+.rate-edit-row{background:var(--gold-soft);border:1px solid var(--gold);border-radius:6px;padding:.75rem;margin-bottom:.85rem}
 
 /* ===== DAILY CHECKLIST ===== */
 .day-check-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--rule);flex-wrap:wrap}
@@ -282,12 +284,44 @@ tr:hover td{background:rgba(156,122,60,.04)}
 .exp-in-row td{color:var(--green)}
 .exp-out-row td{color:var(--red)}
 
+/* ===== EXIT PERMIT ===== */
+.permit-wrap{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+.permit-toolbar{width:100%;max-width:680px;display:flex;justify-content:flex-end;margin-bottom:1rem}
+.permit-doc{width:100%;max-width:680px;background:#fff;border:1px solid var(--rule);border-radius:4px;padding:2.5rem 2.5rem 3rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.permit-doc-logo{display:block;max-width:170px;margin:0 auto 1.4rem}
+.permit-doc-title{font-family:'Zilla Slab',serif;font-size:24px;font-weight:700;text-align:center;color:var(--ink);margin-bottom:.3rem;letter-spacing:.02em}
+.permit-doc-subtitle{text-align:center;font-size:12px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1.8rem}
+.permit-rule{height:2px;background:var(--gold);width:60px;margin:0 auto 2rem}
+.permit-date-row{display:flex;justify-content:center;gap:2.5rem;margin-bottom:2.5rem;flex-wrap:wrap}
+.permit-date-item{text-align:center}
+.permit-date-item .lbl{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px;letter-spacing:.03em}
+.permit-date-item .val{font-size:17px;font-weight:700;color:var(--ink);font-family:'Zilla Slab',serif}
+.permit-body-note{text-align:center;color:var(--muted);font-size:13px;margin-bottom:3rem;line-height:1.8}
+.permit-sign-row{display:flex;justify-content:space-between;gap:2rem;margin-top:2.5rem;flex-wrap:wrap}
+.permit-sign-box{flex:1;min-width:200px;text-align:center}
+.permit-sign-line{border-bottom:1.5px solid var(--ink);height:50px;margin-bottom:8px}
+.permit-sign-label{font-size:12px;font-weight:600;color:var(--ink)}
+@media print{
+  .permit-toolbar{display:none!important}
+  .permit-wrap{padding:0}
+  .permit-doc{box-shadow:none;border:none;max-width:100%}
+}
+@media(max-width:700px){
+  .permit-doc{padding:1.6rem 1.3rem 2rem}
+  .permit-date-row{gap:1.3rem}
+  .permit-sign-row{flex-direction:column;gap:2rem}
+}
+
 /* ===== PRINT ===== */
 @media print{
   .topnav,.sidebar,.mob-menu,.btn,.btn-sm,.btn-x,.btn-new,.pname-inp,.no-print{display:none!important}
   .layout,.section,.page-view,#main-wrap,.erp-wrap{display:none!important}
   body{background:#fff}
   .print-invoice{display:block!important}
+  /* exit permit prints itself directly, bypassing the generic hide-all rule above */
+  body.printing-exit-permit .layout,
+  body.printing-exit-permit #main-wrap,
+  body.printing-exit-permit #section-exitpermit{display:block!important;margin:0!important;padding:0!important}
 }
 .print-invoice{display:none;padding:1.5rem;font-size:13px;font-family:'Cairo',sans-serif}
 .print-invoice h2{text-align:center;margin-bottom:.5rem;font-family:'Zilla Slab',serif}
@@ -402,6 +436,7 @@ tr:hover td{background:rgba(156,122,60,.04)}
   </div>
   <button class="tab-btn" onclick="switchSection('orders',this)">الطلبات</button>
     <button class="tab-btn" onclick="switchSection('expenses',this)">المصاريف</button>
+    <button class="tab-btn" onclick="switchSection('exitpermit',this)">إذن خروج</button>
   <div id="user-badge" class="user-badge"></div>
   <button class="mob-menu" onclick="toggleSidebar()">&#9776;</button>
 </nav>
@@ -438,6 +473,9 @@ document.getElementById('login-password').addEventListener('keydown',function(e)
     </div>
     <div class="section" id="section-expenses">
       <div id="expenses-content"></div>
+    </div>
+    <div class="section" id="section-exitpermit">
+      <div id="exitpermit-content"></div>
     </div>
   </div>
 </div>
@@ -522,14 +560,15 @@ window.switchSection=function(sec,btn){
   document.getElementById('section-'+sec).classList.add('active');
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('sb-label').textContent={debtors:'المدين',customers:'العملاء',salaries:'المرتبات',orders:'الطلبات',expenses:'المصاريف'}[sec]||'';
+  document.getElementById('sb-label').textContent={debtors:'المدين',customers:'العملاء',salaries:'المرتبات',orders:'الطلبات',expenses:'المصاريف',exitpermit:'إذن خروج'}[sec]||'';
   document.getElementById('sb-add').textContent={debtors:'+ إضافة حساب',customers:'+ إضافة عميل',salaries:'+ إضافة قسم',orders:''}[sec]||'';
-  document.getElementById('sb-add').style.display=(sec==='orders'||sec==='expenses'||sec==='customers')?'none':'block';
-  document.getElementById('sidebar').style.display=(sec==='customers')?'none':'flex';
-  document.getElementById('main-wrap').style.marginRight=(sec==='customers')?'0':'226px';
+  document.getElementById('sb-add').style.display=(sec==='orders'||sec==='expenses'||sec==='customers'||sec==='exitpermit')?'none':'block';
+  document.getElementById('sidebar').style.display=(sec==='customers'||sec==='exitpermit')?'none':'flex';
+  document.getElementById('main-wrap').style.marginRight=(sec==='customers'||sec==='exitpermit')?'0':'226px';
   if(sec==='customers')renderCustomersERP();
   if(sec==='orders')renderOrdersPage();
   if(sec==='expenses')renderExpensesPage();
+  if(sec==='exitpermit')renderExitPermit();
   renderSidebar();
 };
 window.sidebarAdd=function(){curSection==='salaries'?newSalaryDept():newPage(curSection)};
@@ -631,6 +670,19 @@ window.addEmployee=async function(deptId){
 window.deleteEmployee=async function(deptId,empId){
   const emp=employees[deptId]?.[empId];if(!confirm('حذف "'+emp?.name+'"؟'))return;
   const b=writeBatch(db);Object.keys(emp?.attendance||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'attendance',aid)));Object.keys(emp?.advances||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'advances',aid)));b.delete(doc(db,'salaries',deptId,'employees',empId));await b.commit();toast('&#x1F5D1; تم حذف الموظف');
+};
+window.toggleRateEdit=function(empId){
+  const row=document.getElementById('rate-edit-'+empId);
+  if(!row)return;
+  row.style.display=row.style.display==='none'?'block':'none';
+};
+window.saveEmployeeRates=async function(deptId,empId){
+  const daily=parseFloat(document.getElementById('rate-daily-'+empId).value);
+  const ot=parseFloat(document.getElementById('rate-ot-'+empId).value||0);
+  if(!daily||daily<=0){alert('ادخل سعر يومية صحيح');return}
+  await setDoc(doc(db,'salaries',deptId,'employees',empId),{dailyRate:daily,overtimeRate:ot||0},{merge:true});
+  toggleRateEdit(empId);
+  toast('&#x270F;&#xFE0F; تم تحديث سعر اليومية والأوفرتايم');
 };
 window.toggleDayCheck=async function(deptId,empId,date,checked){
   const emp=employees[deptId]?.[empId];if(!emp)return;
@@ -830,17 +882,17 @@ function renderInvoiceBuilder(custId){
       <input type="text" placeholder="اسم البند" value="${ln.name}" oninput="updateInvLine(${i},'name',this.value)"/>
       <input type="number" placeholder="السعر" min="0" step="any" value="${ln.price}" oninput="updateInvLine(${i},'price',this.value)"/>
       <input type="number" placeholder="الكمية" min="0" step="any" value="${ln.qty}" oninput="updateInvLine(${i},'qty',this.value)"/>
-      <span class="inv-line-total">${fmt(total)}</span>
+      <span class="inv-line-total" id="inv-line-total-${i}">${fmt(total)}</span>
       <button class="inv-line-del" onclick="removeInvLine(${i})" title="حذف السطر">&#x00D7;</button>
     </div>`;
   }).join('');
   const grandTotal=invLines.reduce((s,ln)=>s+(parseFloat(ln.price)||0)*(parseFloat(ln.qty)||0),0);
   return `<div class="inv-builder">
     <div class="inv-lines-hd"><span>البند</span><span>السعر</span><span>الكمية</span><span>الإجمالي</span><span></span></div>
-    ${linesHTML}
+    <div id="inv-lines-container">${linesHTML}</div>
     <button class="inv-add-line" onclick="addInvLine()">+ إضافة بند آخر</button>
     <div class="inv-builder-foot">
-      <div class="inv-grand-total">الإجمالي الكلي: ${fmt(grandTotal)}</div>
+      <div class="inv-grand-total" id="inv-grand-total">الإجمالي الكلي: ${fmt(grandTotal)}</div>
       <button class="btn" style="border-color:#1A5E96;color:#1A5E96" onclick="saveInvoice('${custId}')">حفظ فاتورة البيع</button>
     </div>
   </div>`;
@@ -854,7 +906,18 @@ function renderPayForm(custId){
   </div>`;
 }
 
-window.updateInvLine=function(i,field,val){invLines[i][field]=val;renderCustomerDetail(curCustId)};
+// Update data + patch only the affected line's total and the grand total —
+// no full re-render, so the input never loses focus while typing.
+window.updateInvLine=function(i,field,val){
+  invLines[i][field]=val;
+  const ln=invLines[i];
+  const total=(parseFloat(ln.price)||0)*(parseFloat(ln.qty)||0);
+  const totalEl=document.getElementById('inv-line-total-'+i);
+  if(totalEl)totalEl.textContent=fmt(total);
+  const grandTotal=invLines.reduce((s,l)=>s+(parseFloat(l.price)||0)*(parseFloat(l.qty)||0),0);
+  const grandEl=document.getElementById('inv-grand-total');
+  if(grandEl)grandEl.textContent='الإجمالي الكلي: '+fmt(grandTotal);
+};
 window.addInvLine=function(){invLines.push({name:'',price:'',qty:''});renderCustomerDetail(curCustId)};
 window.removeInvLine=function(i){if(invLines.length===1)return;invLines.splice(i,1);renderCustomerDetail(curCustId)};
 
@@ -940,7 +1003,7 @@ function calcEmpAll(emp){
 function showWelcome(sec){document.getElementById(sec+'-welcome').style.display='flex'}
 function renderSidebar(){
   const list=document.getElementById('pages-list');const sec=curSection;
-  if(sec==='customers')return;
+  if(sec==='customers'||sec==='exitpermit'||sec==='orders'||sec==='expenses')return;
   if(sec==='salaries'){
     const depts=Object.values(pages.salaries);
     if(!depts.length){list.innerHTML='<p style="font-size:12px;color:#bbb;text-align:center;padding:1rem">لا يوجد أقسام</p>';return}
@@ -1066,10 +1129,20 @@ function renderSalaryPage(deptId){
       </div>
       <div class="emp-body" id="ebody-${emp.id}">
         <div class="emp-meta">
-          <span>اليومية: ${fmt(emp.dailyRate)}</span><span>OT/ساعة: ${fmt(emp.overtimeRate)}</span>
+          <span id="rate-display-${emp.id}">اليومية: ${fmt(emp.dailyRate)} | OT/ساعة: ${fmt(emp.overtimeRate)} <button class="btn btn-sm" style="margin-right:4px" onclick="event.stopPropagation();toggleRateEdit('${emp.id}')">&#x270F;&#xFE0F; تعديل</button></span>
           <span>حضور(${selMonth}): ${pDays}ي</span><span>OT: ${totalOT}س(+${fmt(otPay)})</span>
           <span style="color:#A8222F">سلف: ${fmt(totalAdv)}</span>
           <span style="font-weight:600;color:${net>=0?'#1E6B4E':'#A8222F'}">صافي: ${fmt(net)}</span>
+        </div>
+        <div class="rate-edit-row" id="rate-edit-${emp.id}" style="display:none">
+          <div class="input-row">
+            <div style="flex:0 0 130px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">سعر اليومية</label><input type="number" id="rate-daily-${emp.id}" value="${emp.dailyRate}" min="0"/></div>
+            <div style="flex:0 0 130px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">سعر الأوفرتايم/ساعة</label><input type="number" id="rate-ot-${emp.id}" value="${emp.overtimeRate}" min="0"/></div>
+            <div style="display:flex;gap:6px;align-self:flex-end">
+              <button class="btn btn-dark" onclick="saveEmployeeRates('${deptId}','${emp.id}')">حفظ</button>
+              <button class="btn btn-sm" onclick="toggleRateEdit('${emp.id}')">إلغاء</button>
+            </div>
+          </div>
         </div>
         <div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4C5; الحضور اليومي &#x2014; ${selMonth}</div>${dayRows}</div>
         <div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4B8; إضافة سلفة</div>
@@ -1430,6 +1503,45 @@ window.renderExpensesPage=function(){
     </div>`;
   toggleExpSourceVisibility();
 };
+// ========== EXIT PERMIT (إذن خروج خامات) ==========
+window.renderExitPermit=function(){
+  const el=document.getElementById('exitpermit-content');if(!el)return;
+  const now=new Date();
+  const dayName=now.toLocaleDateString('ar-EG',{weekday:'long'});
+  const dateStr=now.toLocaleDateString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit'});
+  const logoSrc=document.querySelector('.topnav-logo')?.src||'';
+
+  el.innerHTML=`
+    <div class="permit-wrap">
+      <div class="permit-toolbar">
+        <button class="btn btn-dark no-print" onclick="printExitPermit()">&#x1F5A8; طباعة الإذن</button>
+      </div>
+      <div class="permit-doc" id="permit-doc">
+        <img class="permit-doc-logo" src="${logoSrc}" alt="Trust Group"/>
+        <div class="permit-doc-title">إذن خروج خامات</div>
+        <div class="permit-doc-subtitle">Trust Group</div>
+        <div class="permit-rule"></div>
+        <div class="permit-date-row">
+          <div class="permit-date-item"><div class="lbl">اليوم</div><div class="val">${dayName}</div></div>
+          <div class="permit-date-item"><div class="lbl">الموافق</div><div class="val">${dateStr}</div></div>
+        </div>
+        <div class="permit-body-note">يُسمح بخروج الخامات المذكورة أعلاه من مقر الشركة بموجب هذا الإذن</div>
+        <div class="permit-sign-row">
+          <div class="permit-sign-box">
+            <div class="permit-sign-line"></div>
+            <div class="permit-sign-label">توقيع المدير</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+};
+
+window.printExitPermit=function(){
+  document.body.classList.add('printing-exit-permit');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('printing-exit-permit'),500);
+};
+
 listenSection('debtors');listenSection('customers');listenSalaryDepts();
 listenOrders();listenExpenses();
 </script>
