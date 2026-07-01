@@ -635,7 +635,7 @@ function fmt(n){return Number(n||0).toLocaleString('ar-EG')}
 function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500)}
 function today(){return new Date().toISOString().slice(0,10)}
 function getDaysInMonth(ym){const[y,m]=ym.split('-').map(Number);const days=[];const t=new Date(y,m,0).getDate();for(let d=1;d<=t;d++)days.push(ym+'-'+String(d).padStart(2,'0'));return days}
-function getAllMonths(emp){const s=new Set();Object.values(emp.attendance||{}).forEach(a=>{if(a.date)s.add(a.date.slice(0,7))});Object.values(emp.advances||{}).forEach(a=>{if(a.isoDate)s.add(a.isoDate.slice(0,7))});return[...s].sort().reverse()}
+function getAllMonths(emp){const s=new Set();Object.values(emp.attendance||{}).forEach(a=>{if(a.date)s.add(a.date.slice(0,7))});Object.values(emp.advances||{}).forEach(a=>{if(a.isoDate)s.add(a.isoDate.slice(0,7))});s.add(today().slice(0,7));return[...s].sort().reverse()}
 
 window.switchSection=function(sec,btn){
   curSection=sec;
