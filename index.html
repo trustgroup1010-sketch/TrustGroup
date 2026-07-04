@@ -803,7 +803,19 @@ function listenAttendance(deptId,empId){
 function listenAdvances(deptId,empId){
   onSnapshot(query(collection(db,'salaries',deptId,'employees',empId,'advances'),orderBy('createdAt')),snap=>{
     if(!employees[deptId]?.[empId])return;
-    employees[deptId][empId].advances={};snap.docs.forEach(d=>{employees[deptId][empId].advances[d.id]={id:d.id,...d.data()}});
+    employees[deptId][empId].advances={};
+    snap.docs.forEach(d=>{
+      const data={id:d.id,...d.data()};
+      // Auto-migrate: if advance has no isoDate, derive it from createdAt or date field
+      if(!data.isoDate){
+        if(data.createdAt?.seconds){
+          data.isoDate=new Date(data.createdAt.seconds*1000).toISOString().slice(0,10);
+        } else {
+          data.isoDate=today(); // fallback to today if no timestamp
+        }
+      }
+      employees[deptId][empId].advances[d.id]=data;
+    });
     renderSalaryPage(deptId);
     if(currentUserRole==='employee'&&currentEmployee?.id===empId)renderEmployeeSelfView(deptId,empId);
   });
@@ -855,6 +867,32 @@ window.deleteEmployee=async function(deptId,empId){
   const emp=employees[deptId]?.[empId];if(!confirm('حذف "'+emp?.name+'"؟'))return;
   const b=writeBatch(db);Object.keys(emp?.attendance||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'attendance',aid)));Object.keys(emp?.advances||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'advances',aid)));b.delete(doc(db,'salaries',deptId,'employees',empId));await b.commit();toast('&#x1F5D1; تم حذف الموظف');
 };
+window.renameEmployee=async function(deptId,empId){
+  const emp=employees[deptId]?.[empId];if(!emp)return;
+  const newName=prompt('اسم الموظف الجديد:',emp.name);
+  if(!newName?.trim()||newName.trim()===emp.name)return;
+  await setDoc(doc(db,'salaries',deptId,'employees',empId),{name:newName.trim()},{merge:true});
+  toast('&#x270F;&#xFE0F; تم تعديل اسم الموظف');
+};
+// ===== SETTLE EMPLOYEE (تصفية الحساب) =====
+// Adds a "settlement advance" equal to the current net salary,
+// which brings the month's net to zero (fully paid/settled).
+window.settleEmployee=async function(deptId,empId,selMonth){
+  const emp=employees[deptId]?.[empId];if(!emp)return;
+  const{net}=calcEmpMonth(emp,selMonth);
+  if(net<=0){toast('&#x26A0;&#xFE0F; المستحق صفر أو سالب — لا حاجة للتصفية');return}
+  if(!confirm('تصفية حساب '+emp.name+' لشهر '+selMonth+'؟\nسيتم إضافة سلفة بقيمة المستحق ('+Number(net).toLocaleString('ar-EG')+') مما يجعل صافي الشهر = صفر'))return;
+  const now=new Date();
+  await addDoc(collection(db,'salaries',deptId,'employees',empId,'advances'),{
+    amount:net,
+    note:'تصفية حساب — '+selMonth,
+    isoDate:selMonth+'-01',
+    date:now.toLocaleDateString('ar-EG'),
+    createdAt:serverTimestamp()
+  });
+  toast('&#x2705; تم تصفية حساب '+emp.name);
+};
+
 window.toggleRateEdit=function(empId){
   const row=document.getElementById('rate-edit-'+empId);
   if(!row)return;
@@ -1162,10 +1200,17 @@ function calcEmpMonth(emp,month){
   const att=Object.values(emp.attendance||{}).filter(a=>a.date?.startsWith(month));
   const pDays=att.filter(a=>a.status==='present').length;
   const totalOT=att.reduce((s,a)=>s+(parseFloat(a.overtime)||0),0);
-  const adv=Object.values(emp.advances||{}).filter(a=>(a.isoDate||'').startsWith(month));
+  // Support advances that have isoDate OR a parseable Arabic date string.
+  // If neither exists, we fall back to including them in the CURRENT month only.
+  const adv=Object.values(emp.advances||{}).filter(a=>{
+    if(a.isoDate) return a.isoDate.startsWith(month);
+    // Legacy records without isoDate: skip them from month totals
+    // (they won't affect any specific month)
+    return false;
+  });
   const totalAdv=adv.reduce((s,a)=>s+(parseFloat(a.amount)||0),0);
   const base=pDays*(emp.dailyRate||0);const otPay=totalOT*(emp.overtimeRate||0);
-  return{pDays,totalOT,base,otPay,totalAdv,net:base+otPay-totalAdv};
+  return{pDays,totalOT,base,otPay,totalAdv,net:base+otPay-totalAdv,advArr:adv};
 }
 // calcEmpAll now sums only the selected month's attendance+advances
 // so the dept-level totals stay consistent with monthly filtering
@@ -1296,6 +1341,8 @@ function renderSalaryPage(deptId){
           <div class="emp-summary">يومية: ${fmt(emp.dailyRate)} | حضور: ${pDays}ي | صافي ${selMonth}: <strong style="color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</strong></div>
         </div>
         <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+          ${net>0?`<button class="btn btn-sm" style="border-color:var(--gold);color:var(--gold)" onclick="event.stopPropagation();settleEmployee('${deptId}','${emp.id}','${selMonth}')">&#x2714; تصفية</button>`:''}
+          <button class="btn btn-sm" onclick="event.stopPropagation();renameEmployee('${deptId}','${emp.id}')">✏️ تعديل الاسم</button>
           <button class="btn btn-sm" onclick="event.stopPropagation();deleteEmployee('${deptId}','${emp.id}')">حذف</button>
           <span id="earr-${emp.id}" style="color:#aaa;font-size:14px">&#x25BE;</span>
         </div>
