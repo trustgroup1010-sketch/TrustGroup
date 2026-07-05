@@ -858,10 +858,19 @@ window.finishRenameSalaryDept=async function(id){
   const nd=document.getElementById('snd-'+id);if(nd){nd.textContent=pages.salaries[id]?.name||n||'—';nd.style.display='inline';i.style.display='none'}
 };
 window.addEmployee=async function(deptId){
-  const name=document.getElementById('emp-name-'+deptId).value.trim();const daily=parseFloat(document.getElementById('emp-daily-'+deptId).value);const ot=parseFloat(document.getElementById('emp-ot-'+deptId).value||0);
-  if(!name||!daily){alert('ادخل الاسم واليومية');return}
-  await addDoc(collection(db,'salaries',deptId,'employees'),{name,dailyRate:daily,overtimeRate:ot||0,createdAt:serverTimestamp()});
-  ['emp-name-','emp-daily-','emp-ot-'].forEach(p=>document.getElementById(p+deptId).value='');toast('&#x1F464; تمت إضافة الموظف');
+  const name=document.getElementById('emp-name-'+deptId).value.trim();
+  const type=document.getElementById('emp-type-'+deptId).value;
+  const daily=parseFloat(document.getElementById('emp-daily-'+deptId).value||0);
+  const monthly=parseFloat(document.getElementById('emp-monthly-'+deptId).value||0);
+  const ot=parseFloat(document.getElementById('emp-ot-'+deptId).value||0);
+  if(!name){alert('ادخل اسم الموظف');return}
+  if(type==='daily'&&!daily){alert('ادخل سعر اليومية');return}
+  if(type==='monthly'&&!monthly){alert('ادخل المرتب الشهري');return}
+  await addDoc(collection(db,'salaries',deptId,'employees'),{
+    name,salaryType:type,dailyRate:daily||0,monthlySalary:monthly||0,overtimeRate:ot||0,createdAt:serverTimestamp()
+  });
+  ['emp-name-','emp-daily-','emp-monthly-','emp-ot-'].forEach(p=>{const el=document.getElementById(p+deptId);if(el)el.value='';});
+  toast('&#x1F464; تمت إضافة الموظف');
 };
 window.deleteEmployee=async function(deptId,empId){
   const emp=employees[deptId]?.[empId];if(!confirm('حذف "'+emp?.name+'"؟'))return;
@@ -893,18 +902,43 @@ window.settleEmployee=async function(deptId,empId,selMonth){
   toast('&#x2705; تم تصفية حساب '+emp.name);
 };
 
+window.toggleEmpTypeFields=function(deptId){
+  const type=document.getElementById('emp-type-'+deptId)?.value;
+  const dw=document.getElementById('emp-daily-wrap-'+deptId);
+  const mw=document.getElementById('emp-monthly-wrap-'+deptId);
+  if(dw)dw.style.display=type==='monthly'?'none':'block';
+  if(mw)mw.style.display=type==='monthly'?'block':'none';
+};
+
 window.toggleRateEdit=function(empId){
   const row=document.getElementById('rate-edit-'+empId);
   if(!row)return;
   row.style.display=row.style.display==='none'?'block':'none';
 };
+window.toggleRateTypeFields=function(empId){
+  const type=document.getElementById('rate-type-'+empId)?.value;
+  const dw=document.getElementById('rate-daily-wrap-'+empId);
+  const mw=document.getElementById('rate-monthly-wrap-'+empId);
+  if(dw)dw.style.display=type==='monthly'?'none':'block';
+  if(mw)mw.style.display=type==='monthly'?'block':'none';
+};
+
 window.saveEmployeeRates=async function(deptId,empId){
-  const daily=parseFloat(document.getElementById('rate-daily-'+empId).value);
-  const ot=parseFloat(document.getElementById('rate-ot-'+empId).value||0);
-  if(!daily||daily<=0){alert('ادخل سعر يومية صحيح');return}
-  await setDoc(doc(db,'salaries',deptId,'employees',empId),{dailyRate:daily,overtimeRate:ot||0},{merge:true});
+  const type=document.getElementById('rate-type-'+empId)?.value||'daily';
+  const ot=parseFloat(document.getElementById('rate-ot-'+empId)?.value||0);
+  let payload={salaryType:type,overtimeRate:ot||0};
+  if(type==='daily'){
+    const daily=parseFloat(document.getElementById('rate-daily-'+empId)?.value||0);
+    if(!daily||daily<=0){alert('ادخل سعر يومية صحيح');return}
+    payload.dailyRate=daily;
+  } else {
+    const monthly=parseFloat(document.getElementById('rate-monthly-'+empId)?.value||0);
+    if(!monthly||monthly<=0){alert('ادخل المرتب الشهري الصحيح');return}
+    payload.monthlySalary=monthly;
+  }
+  await setDoc(doc(db,'salaries',deptId,'employees',empId),payload,{merge:true});
   toggleRateEdit(empId);
-  toast('&#x270F;&#xFE0F; تم تحديث سعر اليومية والأوفرتايم');
+  toast('&#x270F;&#xFE0F; تم تحديث نوع ومبلغ المرتب');
 };
 window.toggleDayCheck=async function(deptId,empId,date,checked){
   const emp=employees[deptId]?.[empId];if(!emp)return;
@@ -1196,21 +1230,64 @@ window.printSingleInvoice=function(custId,entryId){
     <div style="text-align:left;font-size:15px;font-weight:700">الإجمالي الكلي: ${fmt(e.amount)}</div>`;
   area.style.display='block';setTimeout(()=>{window.print();area.style.display='none';area.innerHTML=''},300);
 };
+// Count working days (non-Friday) in a month
+function countWorkDays(ym){
+  const[y,m]=ym.split('-').map(Number);
+  const total=new Date(y,m,0).getDate();
+  let work=0;
+  for(let d=1;d<=total;d++){
+    const dow=new Date(y,m-1,d).getDay();
+    if(dow!==5)work++; // 5 = Friday
+  }
+  return work;
+}
+// Is a given date string a Friday?
+function isFriday(dateStr){
+  return new Date(dateStr+'T00:00:00').getDay()===5;
+}
+
 function calcEmpMonth(emp,month){
   const att=Object.values(emp.attendance||{}).filter(a=>a.date?.startsWith(month));
   const pDays=att.filter(a=>a.status==='present').length;
   const totalOT=att.reduce((s,a)=>s+(parseFloat(a.overtime)||0),0);
-  // Support advances that have isoDate OR a parseable Arabic date string.
-  // If neither exists, we fall back to including them in the CURRENT month only.
   const adv=Object.values(emp.advances||{}).filter(a=>{
     if(a.isoDate) return a.isoDate.startsWith(month);
-    // Legacy records without isoDate: skip them from month totals
-    // (they won't affect any specific month)
     return false;
   });
   const totalAdv=adv.reduce((s,a)=>s+(parseFloat(a.amount)||0),0);
-  const base=pDays*(emp.dailyRate||0);const otPay=totalOT*(emp.overtimeRate||0);
-  return{pDays,totalOT,base,otPay,totalAdv,net:base+otPay-totalAdv,advArr:adv};
+  const otPay=totalOT*(emp.overtimeRate||0);
+
+  let base=0,absentDeduct=0,fridayBonus=0;
+  if((emp.salaryType||'daily')==='monthly'){
+    const workDays=countWorkDays(month);         // total workdays (no Fridays)
+    const dayRate=(emp.monthlySalary||0)/workDays; // value of one workday
+
+    // Count absent workdays (non-Friday days marked absent OR not marked at all)
+    const allAtt={}; att.forEach(a=>allAtt[a.date]=a);
+    const[y,mo]=month.split('-').map(Number);
+    const totalDays=new Date(y,mo,0).getDate();
+    let absentDays=0;
+    for(let d=1;d<=totalDays;d++){
+      const dateStr=month+'-'+String(d).padStart(2,'0');
+      const dow=new Date(y,mo-1,d).getDay();
+      if(dow===5) continue; // skip Fridays from absent count
+      const rec=allAtt[dateStr];
+      if(!rec||rec.status==='absent') absentDays++;
+    }
+    absentDeduct=absentDays*dayRate;
+
+    // Fridays attended = bonus
+    const fridaysPresent=att.filter(a=>a.status==='present'&&isFriday(a.date)).length;
+    fridayBonus=fridaysPresent*dayRate;
+
+    base=(emp.monthlySalary||0)-absentDeduct+fridayBonus;
+    if(base<0)base=0;
+  } else {
+    base=pDays*(emp.dailyRate||0);
+  }
+
+  return{pDays,totalOT,base,otPay,totalAdv,net:base+otPay-totalAdv,advArr:adv,
+    absentDeduct,fridayBonus,salaryType:emp.salaryType||'daily'};
 }
 // calcEmpAll now sums only the selected month's attendance+advances
 // so the dept-level totals stay consistent with monthly filtering
@@ -1318,7 +1395,8 @@ function renderSalaryPage(deptId){
   empArr.forEach(emp=>{const{net,totalAdv,pDays}=calcEmpMonth(emp,selMonth);mNet+=net;mAdv+=totalAdv;mDays+=pDays});
   const monthTabsHTML=monthsList.map(m=>`<button class="month-tab ${m===selMonth?'active':''}" onclick="selectMonth('${deptId}','${m}')">${m}</button>`).join('');
   const monthlyRows=empArr.map(emp=>{const{pDays,totalOT,base,otPay,totalAdv,net}=calcEmpMonth(emp,selMonth);
-    return `<tr><td>${emp.name}</td><td>${pDays}</td><td>${fmt(emp.dailyRate)}</td><td>${fmt(base)}</td><td>${totalOT}س(+${fmt(otPay)})</td><td style="color:#A8222F">${fmt(totalAdv)}</td><td style="font-weight:600;color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</td></tr>`;
+    const rateLabel=(emp.salaryType||'daily')==='monthly'?fmt(emp.monthlySalary||0):fmt(emp.dailyRate||0);
+    return '<tr><td>'+emp.name+'</td><td>'+pDays+'</td><td>'+rateLabel+'</td><td>'+fmt(base)+'</td><td>'+totalOT+'س(+'+fmt(otPay)+')</td><td style="color:#A8222F">'+fmt(totalAdv)+'</td><td style="font-weight:600;color:'+(net>=0?'#1E6B4E':'#A8222F')+'">'+fmt(net)+'</td></tr>';
   }).join('');
   const daysInMonth=getDaysInMonth(selMonth);
   const empsHTML=empArr.map(emp=>{
@@ -1338,7 +1416,7 @@ function renderSalaryPage(deptId){
     return `<div class="emp-card">
       <div class="emp-card-hd" onclick="toggleEmpCard('${emp.id}')">
         <div style="flex:1;min-width:0"><div class="emp-name">&#x1F464; ${emp.name}</div>
-          <div class="emp-summary">يومية: ${fmt(emp.dailyRate)} | حضور: ${pDays}ي | صافي ${selMonth}: <strong style="color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</strong></div>
+          <div class="emp-summary">${(emp.salaryType||'daily')==='monthly'?'شهري: '+fmt(emp.monthlySalary):'يومية: '+fmt(emp.dailyRate)} | حضور: ${pDays}ي | صافي ${selMonth}: <strong style="color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</strong></div>
         </div>
         <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
           ${net>0?`<button class="btn btn-sm" style="border-color:var(--gold);color:var(--gold)" onclick="event.stopPropagation();settleEmployee('${deptId}','${emp.id}','${selMonth}')">&#x2714; تصفية</button>`:''}
@@ -1349,7 +1427,7 @@ function renderSalaryPage(deptId){
       </div>
       <div class="emp-body" id="ebody-${emp.id}">
         <div class="emp-meta">
-          <span id="rate-display-${emp.id}">اليومية: ${fmt(emp.dailyRate)} | OT/ساعة: ${fmt(emp.overtimeRate)} <button class="btn btn-sm" style="margin-right:4px" onclick="event.stopPropagation();toggleRateEdit('${emp.id}')">&#x270F;&#xFE0F; تعديل</button></span>
+          <span id="rate-display-${emp.id}">${(emp.salaryType||'daily')==='monthly'?'🗓 شهري: '+fmt(emp.monthlySalary):'📅 يومية: '+fmt(emp.dailyRate)} | OT/ساعة: ${fmt(emp.overtimeRate)} <button class="btn btn-sm" style="margin-right:4px" onclick="event.stopPropagation();toggleRateEdit('${emp.id}')">&#x270F;&#xFE0F; تعديل</button></span>
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
             <span style="font-size:11px;color:var(--muted);font-weight:600">&#x1F510; رقم سري الموظف:</span>
             <input type="password" id="pin-inp-${emp.id}" placeholder="4 أرقام" maxlength="6" style="width:90px;padding:4px 8px;font-size:12px" onclick="event.stopPropagation()"/>
@@ -1357,13 +1435,32 @@ function renderSalaryPage(deptId){
             ${emp.pin?'<span style="font-size:10px;color:var(--green)">&#x2705; محدد</span>':'<span style="font-size:10px;color:var(--muted-2)">غير محدد</span>'}
           </div>
           <span>حضور(${selMonth}): ${pDays}ي</span><span>OT: ${totalOT}س(+${fmt(otPay)})</span>
+          ${(emp.salaryType||'daily')==='monthly'&&absentDeduct>0?'<span style="color:#A8222F">خصم غياب: '+fmt(absentDeduct)+'</span>':''}
+          ${(emp.salaryType||'daily')==='monthly'&&fridayBonus>0?'<span style="color:#1E6B4E">جمعات حضور: +'+fmt(fridayBonus)+'</span>':''}
           <span style="color:#A8222F">سلف: ${fmt(totalAdv)}</span>
           <span style="font-weight:600;color:${net>=0?'#1E6B4E':'#A8222F'}">صافي: ${fmt(net)}</span>
         </div>
         <div class="rate-edit-row" id="rate-edit-${emp.id}" style="display:none">
           <div class="input-row">
-            <div style="flex:0 0 130px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">سعر اليومية</label><input type="number" id="rate-daily-${emp.id}" value="${emp.dailyRate}" min="0"/></div>
-            <div style="flex:0 0 130px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">سعر الأوفرتايم/ساعة</label><input type="number" id="rate-ot-${emp.id}" value="${emp.overtimeRate}" min="0"/></div>
+            <div style="flex:0 0 130px">
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">نوع المرتب</label>
+              <select id="rate-type-${emp.id}" onchange="toggleRateTypeFields('${emp.id}')">
+                <option value="daily" ${(emp.salaryType||'daily')==='daily'?'selected':''}>يومية</option>
+                <option value="monthly" ${emp.salaryType==='monthly'?'selected':''}>شهري ثابت</option>
+              </select>
+            </div>
+            <div style="flex:0 0 130px" id="rate-daily-wrap-${emp.id}" ${(emp.salaryType||'daily')==='monthly'?'style="display:none"':''}>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">سعر اليومية</label>
+              <input type="number" id="rate-daily-${emp.id}" value="${emp.dailyRate||0}" min="0"/>
+            </div>
+            <div style="flex:0 0 140px" id="rate-monthly-wrap-${emp.id}" ${(emp.salaryType||'daily')==='daily'?'style="display:none"':''}>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">المرتب الشهري</label>
+              <input type="number" id="rate-monthly-${emp.id}" value="${emp.monthlySalary||0}" min="0"/>
+            </div>
+            <div style="flex:0 0 130px">
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">سعر الأوفرتايم/ساعة</label>
+              <input type="number" id="rate-ot-${emp.id}" value="${emp.overtimeRate}" min="0"/>
+            </div>
             <div style="display:flex;gap:6px;align-self:flex-end">
               <button class="btn btn-dark" onclick="saveEmployeeRates('${deptId}','${emp.id}')">حفظ</button>
               <button class="btn btn-sm" onclick="toggleRateEdit('${emp.id}')">إلغاء</button>
@@ -1406,7 +1503,12 @@ function renderSalaryPage(deptId){
     <div class="card" style="margin-bottom:.85rem"><div class="card-title">&#x1F464; إضافة موظف جديد</div>
       <div class="input-row">
         <div style="flex:1;min-width:90px"><input type="text" id="emp-name-${deptId}" placeholder="اسم الموظف"/></div>
-        <div style="flex:0 0 100px"><input type="number" id="emp-daily-${deptId}" placeholder="اليومية" min="0"/></div>
+        <select id="emp-type-${deptId}" style="flex:0 0 120px" onchange="toggleEmpTypeFields('${deptId}')">
+          <option value="daily">يومية</option>
+          <option value="monthly">شهري ثابت</option>
+        </select>
+        <div style="flex:0 0 100px" id="emp-daily-wrap-${deptId}"><input type="number" id="emp-daily-${deptId}" placeholder="اليومية" min="0"/></div>
+        <div style="flex:0 0 120px;display:none" id="emp-monthly-wrap-${deptId}"><input type="number" id="emp-monthly-${deptId}" placeholder="المرتب الشهري" min="0"/></div>
         <div style="flex:0 0 110px"><input type="number" id="emp-ot-${deptId}" placeholder="OT/ساعة" min="0"/></div>
         <button class="btn btn-dark" onclick="addEmployee('${deptId}')">إضافة</button>
       </div>
@@ -1803,7 +1905,7 @@ window.renderEmployeeSelfView=function(deptId, empId){
   if(welcome)welcome.style.display='none';
   container.innerHTML=`
     <div class="emp-self-header">
-      <div><h2>👤 ${emp.name}</h2><span>اليومية: ${fmt(emp.dailyRate)} | OT/ساعة: ${fmt(emp.overtimeRate)}</span></div>
+      <div><h2>👤 ${emp.name}</h2><span>${(emp.salaryType||'daily')==='monthly'?'شهري: '+fmt(emp.monthlySalary):'يومية: '+fmt(emp.dailyRate)} | OT/ساعة: ${fmt(emp.overtimeRate)}</span></div>
       <button class="btn btn-sm" style="border-color:rgba(255,255,255,.3);color:#fff;background:rgba(255,255,255,.1)" onclick="doLogout()">خروج</button>
     </div>
     <div class="month-tabs" style="margin-bottom:1rem">${monthTabsHTML}</div>
