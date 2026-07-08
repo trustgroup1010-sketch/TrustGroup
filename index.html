@@ -437,8 +437,8 @@ tr:hover td{background:rgba(156,122,60,.04)}
     <img class="login-logo" src="" id="login-logo" alt="Trust Group"/>
     <div class="login-title">تسجيل الدخول</div>
     <div class="login-field">
-      <label>البريد الإلكتروني</label>
-      <input type="email" id="login-email" placeholder="example@email.com" autocomplete="username" required/>
+      <label>البريد الإلكتروني / اسم دخول الموظف</label>
+      <input type="text" id="login-email" placeholder="example@email.com أو اسم الدخول" autocomplete="username" required/>
     </div>
     <div class="login-field">
       <label>كلمة المرور</label>
@@ -448,6 +448,8 @@ tr:hover td{background:rgba(156,122,60,.04)}
     <button type="submit" class="btn btn-dark login-btn" id="login-submit-btn" onclick="doLogin()">دخول</button>
   </form>
 </div>
+
+<div id="employee-portal-root" style="display:none"></div>
 
 <div id="app-root" style="display:none">
 <div class="toast" id="toast"></div>
@@ -535,12 +537,17 @@ setTimeout(function(){
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore,collection,doc,addDoc,setDoc,deleteDoc,onSnapshot,query,orderBy,serverTimestamp,writeBatch,enableIndexedDbPersistence,enableMultiTabIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore,collection,collectionGroup,doc,addDoc,setDoc,deleteDoc,onSnapshot,query,where,orderBy,serverTimestamp,writeBatch,getDocs,enableIndexedDbPersistence,enableMultiTabIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,onAuthStateChanged,signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseApp=initializeApp({apiKey:"AIzaSyCdT6hp9NQvCee1R-IkjCEE4mx3m483VDw",authDomain:"trust-group-3796d.firebaseapp.com",projectId:"trust-group-3796d",storageBucket:"trust-group-3796d.firebasestorage.app",messagingSenderId:"1096868997914",appId:"1:1096868997914:web:05bd68204a10749ebf5aa3"});
 const db=getFirestore(firebaseApp);
 const auth=getAuth(firebaseApp);
+// Secondary app instance: used ONLY to create employee login accounts without
+// signing the admin out of their current session (Firebase quirk: creating a
+// user via a given Auth instance automatically signs in as that new user).
+const secondaryApp=initializeApp(firebaseApp.options,"Secondary");
+const secondaryAuth=getAuth(secondaryApp);
 
 // Enable offline persistence: data already loaded gets cached locally, and
 // any writes made while offline are queued and auto-synced once back online.
@@ -563,12 +570,13 @@ let currentUserRole=null;
 let currentUserEmail=null;
 
 window.doLogin=async function(){
-  const email=document.getElementById('login-email').value.trim();
+  let email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-password').value;
   const errEl=document.getElementById('login-error');
   const btn=document.getElementById('login-submit-btn');
   errEl.textContent='';
   if(!email||!pass){errEl.textContent='ادخل البريد الإلكتروني وكلمة المرور';return}
+  if(!email.includes('@'))email=email.toLowerCase().replace(/\s+/g,'')+'@trust-emp.local';
   btn.disabled=true;btn.textContent='جاري الدخول...';
   try{
     await signInWithEmailAndPassword(auth,email,pass);
@@ -582,22 +590,48 @@ window.doLogout=async function(){
   await signOut(auth);
 };
 
-onAuthStateChanged(auth,(user)=>{
+onAuthStateChanged(auth,async(user)=>{
   const loginScreen=document.getElementById('login-screen');
   const appRoot=document.getElementById('app-root');
+  const empRoot=document.getElementById('employee-portal-root');
   const btn=document.getElementById('login-submit-btn');
   if(user){
-    currentUserEmail=user.email;
-    const roleInfo=USER_ROLES[user.email]||{role:'manager',label:'مستخدم'};
-    currentUserRole=roleInfo.role;
-    loginScreen.style.display='none';
-    appRoot.style.display='block';
-    document.getElementById('user-badge').innerHTML=`<span class="role-tag">${roleInfo.label}</span><span>${user.email}</span><button class="logout-btn" onclick="doLogout()">خروج</button>`;
-    applyRolePermissions();
+    if(USER_ROLES[user.email]){
+      currentUserEmail=user.email;
+      const roleInfo=USER_ROLES[user.email];
+      currentUserRole=roleInfo.role;
+      stopEmployeePortal();
+      loginScreen.style.display='none';
+      appRoot.style.display='block';
+      empRoot.style.display='none';
+      document.getElementById('user-badge').innerHTML=`<span class="role-tag">${roleInfo.label}</span><span>${user.email}</span><button class="logout-btn" onclick="doLogout()">خروج</button>`;
+      applyRolePermissions();
+    }else{
+      try{
+        const snap=await getDocs(query(collectionGroup(db,'employees'),where('authUid','==',user.uid)));
+        if(!snap.empty){
+          const empDoc=snap.docs[0];
+          const deptId=empDoc.ref.parent.parent.id;
+          loginScreen.style.display='none';
+          appRoot.style.display='none';
+          empRoot.style.display='block';
+          startEmployeePortal(deptId,empDoc.id);
+        }else{
+          document.getElementById('login-error').textContent='هذا الحساب غير مرتبط بأي موظف';
+          await signOut(auth);
+        }
+      }catch(e){
+        console.error(e);
+        document.getElementById('login-error').textContent='حصل خطأ أثناء الدخول';
+        await signOut(auth);
+      }
+    }
   }else{
     currentUserRole=null;currentUserEmail=null;
+    stopEmployeePortal();
     loginScreen.style.display='flex';
     appRoot.style.display='none';
+    empRoot.style.display='none';
     if(btn){btn.disabled=false;btn.textContent='دخول'}
     document.getElementById('login-email').value='';
     document.getElementById('login-password').value='';
@@ -635,7 +669,7 @@ function fmt(n){return Number(n||0).toLocaleString('ar-EG')}
 function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500)}
 function today(){return new Date().toISOString().slice(0,10)}
 function getDaysInMonth(ym){const[y,m]=ym.split('-').map(Number);const days=[];const t=new Date(y,m,0).getDate();for(let d=1;d<=t;d++)days.push(ym+'-'+String(d).padStart(2,'0'));return days}
-function getAllMonths(emp){const s=new Set();Object.values(emp.attendance||{}).forEach(a=>{if(a.date)s.add(a.date.slice(0,7))});Object.values(emp.advances||{}).forEach(a=>{if(a.isoDate)s.add(a.isoDate.slice(0,7))});s.add(today().slice(0,7));return[...s].sort().reverse()}
+function getAllMonths(emp){const s=new Set();Object.values(emp.attendance||{}).forEach(a=>{if(a.date)s.add(a.date.slice(0,7))});Object.values(emp.advances||{}).forEach(a=>{if(a.isoDate)s.add(a.isoDate.slice(0,7))});Object.values(emp.bonuses||{}).forEach(a=>{if(a.isoDate)s.add(a.isoDate.slice(0,7))});s.add(today().slice(0,7));return[...s].sort().reverse()}
 function isFriday(dateStr){return new Date(dateStr+'T00:00:00').getDay()===5}
 function effectiveMonthDays(month){const days=getDaysInMonth(month);const t=today();const tm=t.slice(0,7);if(month===tm)return days.filter(d=>d<=t);if(month<tm)return days;return[]}
 
@@ -693,7 +727,7 @@ function listenEmployees(deptId){
     if(!employees[deptId])employees[deptId]={};
     const ids=snap.docs.map(d=>d.id);
     Object.keys(employees[deptId]).forEach(id=>{if(!ids.includes(id))delete employees[deptId][id]});
-    snap.docs.forEach(d=>{if(!employees[deptId][d.id])employees[deptId][d.id]={id:d.id,...d.data(),attendance:{},advances:{}};else Object.assign(employees[deptId][d.id],d.data());listenAttendance(deptId,d.id);listenAdvances(deptId,d.id)});
+    snap.docs.forEach(d=>{if(!employees[deptId][d.id])employees[deptId][d.id]={id:d.id,...d.data(),attendance:{},advances:{},bonuses:{}};else Object.assign(employees[deptId][d.id],d.data());listenAttendance(deptId,d.id);listenAdvances(deptId,d.id);listenBonuses(deptId,d.id)});
     renderSalaryPage(deptId);if(!curPage.salaries&&Object.keys(pages.salaries).length)openPage('salaries',deptId);
   });
 }
@@ -710,6 +744,83 @@ function listenAdvances(deptId,empId){
     employees[deptId][empId].advances={};snap.docs.forEach(d=>{employees[deptId][empId].advances[d.id]={id:d.id,...d.data()}});
     renderSalaryPage(deptId);
   });
+}
+function listenBonuses(deptId,empId){
+  onSnapshot(query(collection(db,'salaries',deptId,'employees',empId,'bonuses'),orderBy('createdAt')),snap=>{
+    if(!employees[deptId]?.[empId])return;
+    employees[deptId][empId].bonuses={};snap.docs.forEach(d=>{employees[deptId][empId].bonuses[d.id]={id:d.id,...d.data()}});
+    renderSalaryPage(deptId);
+  });
+}
+
+// ========== EMPLOYEE PORTAL (self-service, read-only) ==========
+let empPortalUnsub=[];
+let empPortalSelMonth=null;
+function stopEmployeePortal(){empPortalUnsub.forEach(u=>{try{u()}catch(e){}});empPortalUnsub=[];empPortalSelMonth=null}
+function startEmployeePortal(deptId,empId){
+  stopEmployeePortal();
+  const empData={id:empId,attendance:{},advances:{},bonuses:{}};
+  const rerender=()=>renderEmployeePortalView(deptId,empData);
+  const u1=onSnapshot(doc(db,'salaries',deptId,'employees',empId),d=>{if(d.exists()){Object.assign(empData,{id:empId,...d.data()});rerender()}});
+  const u2=onSnapshot(query(collection(db,'salaries',deptId,'employees',empId,'attendance'),orderBy('date')),snap=>{empData.attendance={};snap.docs.forEach(d=>{empData.attendance[d.id]={id:d.id,...d.data()}});rerender()});
+  const u3=onSnapshot(query(collection(db,'salaries',deptId,'employees',empId,'advances'),orderBy('createdAt')),snap=>{empData.advances={};snap.docs.forEach(d=>{empData.advances[d.id]={id:d.id,...d.data()}});rerender()});
+  const u4=onSnapshot(query(collection(db,'salaries',deptId,'employees',empId,'bonuses'),orderBy('createdAt')),snap=>{empData.bonuses={};snap.docs.forEach(d=>{empData.bonuses[d.id]={id:d.id,...d.data()}});rerender()});
+  empPortalUnsub=[u1,u2,u3,u4];
+}
+window.selectEmpPortalMonth=function(m){empPortalSelMonth=m};
+function renderEmployeePortalView(deptId,emp){
+  const el=document.getElementById('employee-portal-root');if(!el)return;
+  const monthsList=getAllMonths(emp);
+  const selMonth=empPortalSelMonth&&monthsList.includes(empPortalSelMonth)?empPortalSelMonth:(monthsList[0]||today().slice(0,7));
+  empPortalSelMonth=selMonth;
+  const{pDays,totalOT,base,otPay,totalAdv,totalBonus,net}=calcEmpMonth(emp,selMonth);
+  const monthTabsHTML=monthsList.map(m=>`<button class="month-tab ${m===selMonth?'active':''}" onclick="selectEmpPortalMonth('${m}');renderEmployeePortalView('${deptId}',window.__empPortalData)">${m}</button>`).join('');
+  window.__empPortalData=emp;
+  const daysInMonth=getDaysInMonth(selMonth);
+  const dayRows=daysInMonth.map(date=>{
+    const dayName=new Date(date+'T00:00:00').toLocaleDateString('ar-EG',{weekday:'short'});const dayNum=date.slice(8);
+    if(emp.payType==='monthly'&&isFriday(date)){
+      return `<div class="day-check-row" style="opacity:.6"><span class="day-label">${dayNum} ${dayName}</span><span style="font-size:11px;color:#1A5E96;font-weight:600">&#x1F3D6;&#xFE0F; إجازة أسبوعية</span></div>`;
+    }
+    const att=emp.attendance?.[date];const isP=att?.status==='present';const otVal=att?.overtime||0;
+    const isFuture=date>today();
+    let statusHTML;
+    if(isP)statusHTML=`<span style="font-size:11px;color:#1E6B4E;font-weight:600">&#x2705; حاضر${otVal?` (OT ${otVal}س)`:''}</span>`;
+    else if(isFuture)statusHTML='<span style="font-size:11px;color:#aaa">—</span>';
+    else statusHTML='<span style="font-size:11px;color:#A8222F;font-weight:600">&#x274C; غائب</span>';
+    return `<div class="day-check-row"><span class="day-label">${dayNum} ${dayName}</span>${statusHTML}</div>`;
+  }).join('');
+  const advArr=Object.values(emp.advances||{}).filter(a=>(a.isoDate||'').startsWith(selMonth)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  const advRows=advArr.map(a=>`<tr><td>${a.date||''}</td><td>${fmt(a.amount)}</td><td>${a.note||'—'}</td></tr>`).join('');
+  const bonArr=Object.values(emp.bonuses||{}).filter(a=>(a.isoDate||'').startsWith(selMonth)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  const bonRows=bonArr.map(a=>`<tr><td>${a.date||''}</td><td>${fmt(a.amount)}</td><td>${a.note||'—'}</td></tr>`).join('');
+  el.innerHTML=`
+    <div class="topnav" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee">
+      <div style="font-weight:700;font-size:15px">&#x1F464; ${emp.name}</div>
+      <button class="logout-btn" onclick="doLogout()">خروج</button>
+    </div>
+    <div style="padding:14px;max-width:640px;margin:0 auto">
+      <div class="card" style="margin-bottom:.85rem"><div class="card-title">&#x1F4CA; ملخص ${selMonth}</div>
+        <div class="month-tabs">${monthTabsHTML}</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:.7rem">
+          <div class="metric"><div class="metric-label">${emp.payType==='monthly'?'المرتب الشهري':'اليومية'}</div><div class="metric-val">${emp.payType==='monthly'?fmt(emp.monthlySalary):fmt(emp.dailyRate)}</div></div>
+          <div class="metric"><div class="metric-label">أيام الحضور</div><div class="metric-val">${pDays}</div></div>
+          <div class="metric"><div class="metric-label">الأساسي</div><div class="metric-val">${fmt(base)}</div></div>
+          <div class="metric"><div class="metric-label">أوفرتايم</div><div class="metric-val">${totalOT}س (+${fmt(otPay)})</div></div>
+          <div class="metric"><div class="metric-label">مكافآت</div><div class="metric-val green">${fmt(totalBonus)}</div></div>
+          <div class="metric"><div class="metric-label">سلف</div><div class="metric-val red">${fmt(totalAdv)}</div></div>
+        </div>
+        <div style="margin-top:.7rem;text-align:center;padding:10px;background:#f7f7f5;border-radius:6px">
+          <div style="font-size:12px;color:var(--muted)">صافي المستحق</div>
+          <div style="font-size:20px;font-weight:700;color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4C5; الحضور اليومي &#x2014; ${selMonth}</div>${dayRows}</div>
+      ${advArr.length?`<div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4B8; سجل السلف (${selMonth})</div>
+        <div class="tbl-wrap"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظة</th></tr></thead><tbody>${advRows}</tbody></table></div></div>`:''}
+      ${bonArr.length?`<div class="card"><div class="card-title">&#x1F381; سجل المكافآت (${selMonth})</div>
+        <div class="tbl-wrap"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظة</th></tr></thead><tbody>${bonRows}</tbody></table></div></div>`:''}
+    </div>`;
 }
 
 window.newPage=async function(sec){const name=prompt('الاسم:');if(!name?.trim())return;await addDoc(collection(db,sec),{name:name.trim(),createdAt:serverTimestamp()});toast('&#x2705; تمت الإضافة')};
@@ -739,7 +850,7 @@ window.newSalaryDept=async function(){const name=prompt('اسم القسم:');if
 window.deleteSalaryDept=async function(deptId){
   if(!confirm('حذف القسم وكل بياناته؟'))return;
   const b=writeBatch(db);
-  Object.values(employees[deptId]||{}).forEach(emp=>{Object.keys(emp.attendance||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',emp.id,'attendance',aid)));Object.keys(emp.advances||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',emp.id,'advances',aid)));b.delete(doc(db,'salaries',deptId,'employees',emp.id))});
+  Object.values(employees[deptId]||{}).forEach(emp=>{Object.keys(emp.attendance||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',emp.id,'attendance',aid)));Object.keys(emp.advances||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',emp.id,'advances',aid)));Object.keys(emp.bonuses||{}).forEach(bid=>b.delete(doc(db,'salaries',deptId,'employees',emp.id,'bonuses',bid)));b.delete(doc(db,'salaries',deptId,'employees',emp.id))});
   b.delete(doc(db,'salaries',deptId));await b.commit();toast('&#x1F5D1; تم الحذف');
 };
 window.renameSalaryDept=function(id){document.getElementById('snd-'+id).style.display='none';const i=document.getElementById('sni-'+id);i.style.display='inline-block';i.focus();i.select()};
@@ -769,7 +880,7 @@ window.addEmployee=async function(deptId){
 };
 window.deleteEmployee=async function(deptId,empId){
   const emp=employees[deptId]?.[empId];if(!confirm('حذف "'+emp?.name+'"؟'))return;
-  const b=writeBatch(db);Object.keys(emp?.attendance||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'attendance',aid)));Object.keys(emp?.advances||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'advances',aid)));b.delete(doc(db,'salaries',deptId,'employees',empId));await b.commit();toast('&#x1F5D1; تم حذف الموظف');
+  const b=writeBatch(db);Object.keys(emp?.attendance||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'attendance',aid)));Object.keys(emp?.advances||{}).forEach(aid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'advances',aid)));Object.keys(emp?.bonuses||{}).forEach(bid=>b.delete(doc(db,'salaries',deptId,'employees',empId,'bonuses',bid)));b.delete(doc(db,'salaries',deptId,'employees',empId));await b.commit();toast('&#x1F5D1; تم حذف الموظف');
 };
 window.toggleRateEdit=function(empId){
   const row=document.getElementById('rate-edit-'+empId);
@@ -825,6 +936,24 @@ window.convertAllPayType=async function(deptId,payType){
   await b.commit();
   toast(payType==='monthly'?'&#x1F4C6; تم تحويل الكل لنظام شهري':'&#x1F4C5; تم تحويل الكل لنظام يومي');
 };
+window.createEmployeeLogin=async function(deptId,empId){
+  const rawUname=document.getElementById('emp-login-user-'+empId).value.trim();
+  const pass=document.getElementById('emp-login-pass-'+empId).value;
+  if(!rawUname){alert('ادخل اسم دخول للموظف');return}
+  if(!pass||pass.length<6){alert('كلمة المرور لازم تكون 6 أحرف على الأقل');return}
+  const uname=rawUname.toLowerCase().replace(/\s+/g,'');
+  const email=uname+'@trust-emp.local';
+  try{
+    const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);
+    const uid=cred.user.uid;
+    await signOut(secondaryAuth);
+    await setDoc(doc(db,'salaries',deptId,'employees',empId),{loginUsername:uname,loginEmail:email,authUid:uid},{merge:true});
+    toast('&#x1F511; تم إنشاء حساب الموظف بنجاح');
+  }catch(e){
+    if(e.code==='auth/email-already-in-use')alert('اسم الدخول ده مستخدم بالفعل، جرب اسم مختلف شوية (مثلاً أضف رقم)');
+    else alert('حصل خطأ: '+(e.message||e.code));
+  }
+};
 window.toggleDayCheck=async function(deptId,empId,date,checked){
   const emp=employees[deptId]?.[empId];if(!emp)return;
   const otVal=parseFloat(document.getElementById('ot-'+empId+'-'+date)?.value||0);
@@ -850,6 +979,20 @@ window.addAdvance=async function(deptId,empId){
   document.getElementById('adv-amt-'+empId).value='';document.getElementById('adv-note-'+empId).value='';toast('&#x1F4B8; تم إضافة السلفة');
 };
 window.deleteAdvance=async function(deptId,empId,advId){await deleteDoc(doc(db,'salaries',deptId,'employees',empId,'advances',advId));toast('&#x1F5D1; تم')};
+window.addBonus=async function(deptId,empId){
+  const amt=parseFloat(document.getElementById('bon-amt-'+empId).value);const note=document.getElementById('bon-note-'+empId).value.trim();
+  if(!amt||amt<=0){alert('ادخل مبلغ صحيح');return}
+  const now=new Date();
+  const month=curMonth[deptId]||today().slice(0,7);
+  const[my,mm]=month.split('-').map(Number);
+  const daysInSelMonth=new Date(my,mm,0).getDate();
+  const day=Math.min(now.getDate(),daysInSelMonth);
+  const isoDate=month+'-'+String(day).padStart(2,'0');
+  const dateObj=new Date(isoDate+'T00:00:00');
+  await addDoc(collection(db,'salaries',deptId,'employees',empId,'bonuses'),{amount:amt,note,isoDate,date:dateObj.toLocaleDateString('ar-EG'),createdAt:serverTimestamp()});
+  document.getElementById('bon-amt-'+empId).value='';document.getElementById('bon-note-'+empId).value='';toast('&#x1F381; تم إضافة المكافأة');
+};
+window.deleteBonus=async function(deptId,empId,bonId){await deleteDoc(doc(db,'salaries',deptId,'employees',empId,'bonuses',bonId));toast('&#x1F5D1; تم')};
 
 function calcBal(page,isSell){
   const e=Object.values(page.entries||{});
@@ -1159,6 +1302,8 @@ function calcEmpMonth(emp,month){
   const totalOT=monthAtt.reduce((s,a)=>s+(parseFloat(a.overtime)||0),0);
   const adv=Object.values(emp.advances||{}).filter(a=>(a.isoDate||'').startsWith(month));
   const totalAdv=adv.reduce((s,a)=>s+(parseFloat(a.amount)||0),0);
+  const bon=Object.values(emp.bonuses||{}).filter(a=>(a.isoDate||'').startsWith(month));
+  const totalBonus=bon.reduce((s,a)=>s+(parseFloat(a.amount)||0),0);
   const otPay=totalOT*(emp.overtimeRate||0);
   if(emp.payType==='monthly'){
     const workDays=effectiveMonthDays(month).filter(d=>!isFriday(d));
@@ -1168,25 +1313,26 @@ function calcEmpMonth(emp,month){
     const deduction=perDay*absentDays.length;
     const base=(emp.monthlySalary||0)-deduction;
     const pDays=workDays.length-absentDays.length;
-    return{pDays,totalOT,base,otPay,totalAdv,net:base+otPay-totalAdv,absentDays:absentDays.length,workDays:workDays.length,deduction};
+    return{pDays,totalOT,base,otPay,totalAdv,totalBonus,net:base+otPay+totalBonus-totalAdv,absentDays:absentDays.length,workDays:workDays.length,deduction};
   }
   const pDays=monthAtt.filter(a=>a.status==='present').length;
   const base=pDays*(emp.dailyRate||0);
-  return{pDays,totalOT,base,otPay,totalAdv,net:base+otPay-totalAdv};
+  return{pDays,totalOT,base,otPay,totalAdv,totalBonus,net:base+otPay+totalBonus-totalAdv};
 }
 function calcEmpAll(emp){
   const totalAdv=Object.values(emp.advances||{}).reduce((s,a)=>s+(parseFloat(a.amount)||0),0);
+  const totalBonus=Object.values(emp.bonuses||{}).reduce((s,a)=>s+(parseFloat(a.amount)||0),0);
   if(emp.payType==='monthly'){
     const months=getAllMonths(emp);
     let base=0,totalOT=0,otPay=0,pDays=0;
     months.forEach(m=>{const r=calcEmpMonth(emp,m);base+=r.base;totalOT+=r.totalOT;otPay+=r.otPay;pDays+=r.pDays});
-    return{pDays,totalOT,base,otPay,totalAdv,net:base+otPay-totalAdv};
+    return{pDays,totalOT,base,otPay,totalAdv,totalBonus,net:base+otPay+totalBonus-totalAdv};
   }
   const att=Object.values(emp.attendance||{});
   const pDays=att.filter(a=>a.status==='present').length;
   const totalOT=att.reduce((s,a)=>s+(parseFloat(a.overtime)||0),0);
   const base=pDays*(emp.dailyRate||0);const otPay=totalOT*(emp.overtimeRate||0);
-  return{pDays,totalOT,base,otPay,totalAdv,net:base+otPay-totalAdv};
+  return{pDays,totalOT,base,otPay,totalAdv,totalBonus,net:base+otPay+totalBonus-totalAdv};
 }
 
 function showWelcome(sec){document.getElementById(sec+'-welcome').style.display='flex'}
@@ -1288,13 +1434,13 @@ function renderSalaryPage(deptId){
   let mNet=0,mAdv=0,mDays=0;
   empArr.forEach(emp=>{const{net,totalAdv,pDays}=calcEmpMonth(emp,selMonth);mNet+=net;mAdv+=totalAdv;mDays+=pDays});
   const monthTabsHTML=monthsList.map(m=>`<button class="month-tab ${m===selMonth?'active':''}" onclick="selectMonth('${deptId}','${m}')">${m}</button>`).join('');
-  const monthlyRows=empArr.map(emp=>{const{pDays,totalOT,base,otPay,totalAdv,net}=calcEmpMonth(emp,selMonth);
+  const monthlyRows=empArr.map(emp=>{const{pDays,totalOT,base,otPay,totalAdv,totalBonus,net}=calcEmpMonth(emp,selMonth);
     const rateCell=emp.payType==='monthly'?`شهري:${fmt(emp.monthlySalary)}`:fmt(emp.dailyRate);
-    return `<tr><td>${emp.name}</td><td>${pDays}</td><td>${rateCell}</td><td>${fmt(base)}</td><td>${totalOT}س(+${fmt(otPay)})</td><td style="color:#A8222F">${fmt(totalAdv)}</td><td style="font-weight:600;color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</td></tr>`;
+    return `<tr><td>${emp.name}</td><td>${pDays}</td><td>${rateCell}</td><td>${fmt(base)}</td><td>${totalOT}س(+${fmt(otPay)})</td><td style="color:#1E6B4E">${fmt(totalBonus)}</td><td style="color:#A8222F">${fmt(totalAdv)}</td><td style="font-weight:600;color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</td></tr>`;
   }).join('');
   const daysInMonth=getDaysInMonth(selMonth);
   const empsHTML=empArr.map(emp=>{
-    const{pDays,totalOT,base,otPay,totalAdv,net}=calcEmpMonth(emp,selMonth);
+    const{pDays,totalOT,base,otPay,totalAdv,totalBonus,net}=calcEmpMonth(emp,selMonth);
     const dayRows=daysInMonth.map(date=>{
       const dayName=new Date(date+'T00:00:00').toLocaleDateString('ar-EG',{weekday:'short'});const dayNum=date.slice(8);
       if(emp.payType==='monthly'&&isFriday(date)){
@@ -1315,6 +1461,8 @@ function renderSalaryPage(deptId){
     }).join('');
     const advArr=Object.values(emp.advances||{}).filter(a=>(a.isoDate||'').startsWith(selMonth)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
     const advRows=advArr.map(a=>`<tr><td>${a.date||''}</td><td>${fmt(a.amount)}</td><td>${a.note||'—'}</td><td><button class="btn btn-sm" onclick="deleteAdvance('${deptId}','${emp.id}','${a.id}')">&#x00D7;</button></td></tr>`).join('');
+    const bonArr=Object.values(emp.bonuses||{}).filter(a=>(a.isoDate||'').startsWith(selMonth)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    const bonRows=bonArr.map(a=>`<tr><td>${a.date||''}</td><td>${fmt(a.amount)}</td><td>${a.note||'—'}</td><td><button class="btn btn-sm" onclick="deleteBonus('${deptId}','${emp.id}','${a.id}')">&#x00D7;</button></td></tr>`).join('');
     return `<div class="emp-card">
       <div class="emp-card-hd" onclick="toggleEmpCard('${emp.id}')">
         <div style="flex:1;min-width:0"><div class="emp-name">&#x1F464; ${emp.name}</div>
@@ -1329,6 +1477,7 @@ function renderSalaryPage(deptId){
         <div class="emp-meta">
           <span id="rate-display-${emp.id}">${emp.payType==='monthly'?`شهري: ${fmt(emp.monthlySalary)}`:`اليومية: ${fmt(emp.dailyRate)}`} | OT/ساعة: ${fmt(emp.overtimeRate)} <button class="btn btn-sm" style="margin-right:4px" onclick="event.stopPropagation();toggleRateEdit('${emp.id}')">&#x270F;&#xFE0F; تعديل</button></span>
           <span>حضور(${selMonth}): ${pDays}ي</span><span>OT: ${totalOT}س(+${fmt(otPay)})</span>
+          <span style="color:#1E6B4E">مكافآت: ${fmt(totalBonus)}</span>
           <span style="color:#A8222F">سلف: ${fmt(totalAdv)}</span>
           <span style="font-weight:600;color:${net>=0?'#1E6B4E':'#A8222F'}">صافي: ${fmt(net)}</span>
         </div>
@@ -1349,6 +1498,16 @@ function renderSalaryPage(deptId){
               <button class="btn btn-sm" onclick="toggleRateEdit('${emp.id}')">إلغاء</button>
             </div>
           </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
+            <div style="font-size:12px;font-weight:700;margin-bottom:6px">&#x1F511; حساب دخول الموظف</div>
+            ${emp.authUid?`<div style="font-size:12px;color:#1E6B4E;margin-bottom:6px">&#x2705; الحساب مفعّل — اسم الدخول الحالي: <b>${emp.loginUsername||''}</b></div>`:'<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px">لسه ملوش حساب دخول</div>'}
+            <div class="input-row">
+              <div style="flex:0 0 130px"><input type="text" id="emp-login-user-${emp.id}" placeholder="اسم الدخول" value="${emp.loginUsername||''}"/></div>
+              <div style="flex:0 0 140px"><input type="password" id="emp-login-pass-${emp.id}" placeholder="كلمة مرور (6 أحرف+)"/></div>
+              <button class="btn btn-sm" onclick="createEmployeeLogin('${deptId}','${emp.id}')">${emp.authUid?'إنشاء حساب جديد':'إنشاء حساب'}</button>
+            </div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:4px">الموظف بيدخل بنفس صفحة تسجيل الدخول: يكتب اسم الدخول وكلمة المرور بدل الإيميل. لو نسي كلمة المرور، غيّر اسم الدخول شوية وأنشئ حساب جديد.</div>
+          </div>
         </div>
         <div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4C5; الحضور اليومي &#x2014; ${selMonth}</div>${dayRows}</div>
         <div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4B8; إضافة سلفة</div>
@@ -1360,6 +1519,15 @@ function renderSalaryPage(deptId){
         </div>
         ${advArr.length?`<div class="card"><div class="card-title">سجل السلف (${selMonth})</div>
           <div class="tbl-wrap"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظة</th><th></th></tr></thead><tbody>${advRows}</tbody></table></div></div>`:''}
+        <div class="card" style="margin-bottom:.75rem;margin-top:.75rem"><div class="card-title">&#x1F381; إضافة مكافأة</div>
+          <div class="input-row">
+            <div style="flex:0 0 110px"><input type="number" id="bon-amt-${emp.id}" placeholder="المبلغ" min="0"/></div>
+            <div style="flex:1;min-width:80px"><input type="text" id="bon-note-${emp.id}" placeholder="ملاحظة"/></div>
+            <button class="btn btn-dark" onclick="addBonus('${deptId}','${emp.id}')">+ مكافأة</button>
+          </div>
+        </div>
+        ${bonArr.length?`<div class="card"><div class="card-title">سجل المكافآت (${selMonth})</div>
+          <div class="tbl-wrap"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظة</th><th></th></tr></thead><tbody>${bonRows}</tbody></table></div></div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -1385,7 +1553,7 @@ function renderSalaryPage(deptId){
         <div class="metric"><div class="metric-label">إجمالي السلف</div><div class="metric-val red">${fmt(mAdv)}</div></div>
         <div class="metric"><div class="metric-label">صافي المرتبات</div><div class="metric-val green">${fmt(mNet)}</div></div>
       </div>
-      ${empArr.length?`<div class="tbl-wrap"><table><thead><tr><th>الموظف</th><th>حضور</th><th>اليومية/الشهري</th><th>الأساسي</th><th>OT</th><th>السلف</th><th>الصافي</th></tr></thead><tbody>${monthlyRows}</tbody></table></div>`:''}
+      ${empArr.length?`<div class="tbl-wrap"><table><thead><tr><th>الموظف</th><th>حضور</th><th>اليومية/الشهري</th><th>الأساسي</th><th>OT</th><th>مكافآت</th><th>السلف</th><th>الصافي</th></tr></thead><tbody>${monthlyRows}</tbody></table></div>`:''}
     </div>`:''}
     <div class="card" style="margin-bottom:.85rem"><div class="card-title">&#x1F464; إضافة موظف جديد</div>
       <div class="input-row">
