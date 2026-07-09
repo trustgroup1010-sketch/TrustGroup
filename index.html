@@ -220,6 +220,51 @@ tr:hover td{background:rgba(156,122,60,.04)}
 .chk{width:17px;height:17px;cursor:pointer;accent-color:var(--green);flex-shrink:0}
 .ot-inp{width:78px!important;padding:4px 8px!important;font-size:11.5px!important}
 
+/* ===== PROFESSIONAL POLISH: shadows & depth ===== */
+.card,.emp-card,.metric,.ss{box-shadow:0 1px 2px rgba(27,29,34,.04),0 1px 8px rgba(27,29,34,.03)}
+.card{transition:box-shadow .15s}
+.metric,.ss{transition:transform .15s,box-shadow .15s}
+.btn{box-shadow:0 1px 2px rgba(27,29,34,.04);transition:background .15s,border-color .15s,box-shadow .15s,transform .1s}
+.btn:active{transform:translateY(1px)}
+.btn-dark{box-shadow:0 2px 6px rgba(27,29,34,.18)}
+.btn-dark:hover{box-shadow:0 3px 10px rgba(27,29,34,.24)}
+.month-tab{transition:all .15s}
+.month-tab.active{box-shadow:0 2px 6px rgba(27,29,34,.2)}
+.emp-card{transition:box-shadow .15s}
+.emp-card:hover{box-shadow:0 2px 4px rgba(27,29,34,.05),0 3px 14px rgba(27,29,34,.06)}
+
+/* ===== STATUS PILLS (attendance) ===== */
+.status-pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.status-present{background:var(--green-soft);color:var(--green)}
+.status-absent{background:var(--red-soft);color:var(--red)}
+.status-holiday{background:var(--gold-soft);color:var(--gold)}
+.status-future{background:var(--paper);color:var(--muted-2)}
+
+/* ===== RATING BADGE ===== */
+.rating-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#B8944A,var(--gold));color:#fff;font-weight:800;font-size:13px;padding:5px 14px;border-radius:20px;font-family:'Zilla Slab',serif;box-shadow:0 2px 8px rgba(156,122,60,.35);letter-spacing:.02em}
+.rating-badge .star{font-size:12px}
+.rating-stars{display:flex;gap:2px;font-size:14px;color:var(--gold)}
+.rating-input-row{display:flex;align-items:center;gap:8px}
+
+/* ===== EMPLOYEE PORTAL HERO ===== */
+.portal-topbar{position:fixed;top:0;left:0;right:0;height:58px;background:var(--ink);border-bottom:3px solid var(--gold);display:flex;align-items:center;justify-content:space-between;padding:0 1.2rem;z-index:200}
+.portal-topbar-brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:700;font-size:13.5px;font-family:'Zilla Slab',serif;letter-spacing:.02em}
+.portal-wrap{padding:58px 0 2.5rem;max-width:640px;margin:0 auto}
+.portal-hero{background:linear-gradient(160deg,var(--ink) 0%,#2b2e36 100%);border-bottom:3px solid var(--gold);padding:1.8rem 1.4rem 1.6rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:relative;overflow:hidden}
+.portal-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 85% -10%,rgba(156,122,60,.22),transparent 55%);pointer-events:none}
+.portal-avatar{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--gold-soft),var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Zilla Slab',serif;font-weight:800;font-size:24px;color:var(--ink);flex-shrink:0;border:2px solid rgba(255,255,255,.25);position:relative;z-index:1}
+.portal-hero-info{flex:1;min-width:140px;position:relative;z-index:1}
+.portal-name{font-family:'Zilla Slab',serif;font-weight:700;font-size:19px;color:#fff;margin-bottom:4px}
+.portal-role{font-size:11.5px;color:#C8C4B8;font-weight:600;display:flex;align-items:center;gap:6px}
+.portal-role .dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.portal-hero .rating-badge{position:relative;z-index:1}
+.portal-body{padding:1.1rem 1rem 0}
+@media(max-width:700px){
+  .portal-hero{padding:1.4rem 1.1rem 1.3rem}
+  .portal-avatar{width:48px;height:48px;font-size:20px}
+  .portal-name{font-size:16.5px}
+}
+
 /* ===== ORDERS ===== */
 .ord-day-card{background:var(--card);border:1px solid var(--rule);border-radius:6px;margin-bottom:.85rem;overflow:hidden}
 .ord-day-hd{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;background:var(--paper);border-bottom:1px solid var(--rule);cursor:pointer}
@@ -780,26 +825,36 @@ function renderEmployeePortalView(deptId,emp){
   const dayRows=daysInMonth.map(date=>{
     const dayName=new Date(date+'T00:00:00').toLocaleDateString('ar-EG',{weekday:'short'});const dayNum=date.slice(8);
     if(emp.payType==='monthly'&&isFriday(date)){
-      return `<div class="day-check-row" style="opacity:.6"><span class="day-label">${dayNum} ${dayName}</span><span style="font-size:11px;color:#1A5E96;font-weight:600">&#x1F3D6;&#xFE0F; إجازة أسبوعية</span></div>`;
+      return `<div class="day-check-row"><span class="day-label">${dayNum} ${dayName}</span><span class="status-pill status-holiday">&#x1F3D6;&#xFE0F; إجازة أسبوعية</span></div>`;
     }
     const att=emp.attendance?.[date];const isP=att?.status==='present';const otVal=att?.overtime||0;
     const isFuture=date>today();
     let statusHTML;
-    if(isP)statusHTML=`<span style="font-size:11px;color:#1E6B4E;font-weight:600">&#x2705; حاضر${otVal?` (OT ${otVal}س)`:''}</span>`;
-    else if(isFuture)statusHTML='<span style="font-size:11px;color:#aaa">—</span>';
-    else statusHTML='<span style="font-size:11px;color:#A8222F;font-weight:600">&#x274C; غائب</span>';
+    if(isP)statusHTML=`<span class="status-pill status-present">&#x2705; حاضر${otVal?` &#183; OT ${otVal}س`:''}</span>`;
+    else if(isFuture)statusHTML='<span class="status-pill status-future">—</span>';
+    else statusHTML='<span class="status-pill status-absent">&#x274C; غائب</span>';
     return `<div class="day-check-row"><span class="day-label">${dayNum} ${dayName}</span>${statusHTML}</div>`;
   }).join('');
   const advArr=Object.values(emp.advances||{}).filter(a=>(a.isoDate||'').startsWith(selMonth)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   const advRows=advArr.map(a=>`<tr><td>${a.date||''}</td><td>${fmt(a.amount)}</td><td>${a.note||'—'}</td></tr>`).join('');
   const bonArr=Object.values(emp.bonuses||{}).filter(a=>(a.isoDate||'').startsWith(selMonth)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   const bonRows=bonArr.map(a=>`<tr><td>${a.date||''}</td><td>${fmt(a.amount)}</td><td>${a.note||'—'}</td></tr>`).join('');
+  const initial=(emp.name||'?').trim().charAt(0);
   el.innerHTML=`
-    <div class="topnav" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee">
-      <div style="font-weight:700;font-size:15px">&#x1F464; ${emp.name}</div>
+    <div class="portal-topbar">
+      <div class="portal-topbar-brand">&#x1F3E2; Trust Group</div>
       <button class="logout-btn" onclick="doLogout()">خروج</button>
     </div>
-    <div style="padding:14px;max-width:640px;margin:0 auto">
+    <div class="portal-wrap">
+      <div class="portal-hero">
+        <div class="portal-avatar">${initial}</div>
+        <div class="portal-hero-info">
+          <div class="portal-name">${emp.name}</div>
+          <div class="portal-role"><span class="dot"></span>${emp.payType==='monthly'?'موظف براتب شهري':'موظف يومية'}</div>
+        </div>
+        ${emp.rating?`<div class="rating-badge"><span class="star">&#x2B50;</span>${emp.rating}/10</div>`:''}
+      </div>
+      <div class="portal-body">
       <div class="card" style="margin-bottom:.85rem"><div class="card-title">&#x1F4CA; ملخص ${selMonth}</div>
         <div class="month-tabs">${monthTabsHTML}</div>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:.7rem">
@@ -810,9 +865,9 @@ function renderEmployeePortalView(deptId,emp){
           <div class="metric"><div class="metric-label">مكافآت</div><div class="metric-val green">${fmt(totalBonus)}</div></div>
           <div class="metric"><div class="metric-label">سلف</div><div class="metric-val red">${fmt(totalAdv)}</div></div>
         </div>
-        <div style="margin-top:.7rem;text-align:center;padding:10px;background:#f7f7f5;border-radius:6px">
-          <div style="font-size:12px;color:var(--muted)">صافي المستحق</div>
-          <div style="font-size:20px;font-weight:700;color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</div>
+        <div style="margin-top:.9rem;text-align:center;padding:14px;background:linear-gradient(160deg,var(--ink),#2b2e36);border-radius:8px;border-bottom:3px solid var(--gold)">
+          <div style="font-size:11.5px;color:#C8C4B8;font-weight:600;letter-spacing:.03em">صافي المستحق</div>
+          <div style="font-size:24px;font-weight:800;font-family:'Zilla Slab',serif;color:${net>=0?'#4ADE9A':'#FF9E9E'}">${fmt(net)}</div>
         </div>
       </div>
       <div class="card" style="margin-bottom:.75rem"><div class="card-title">&#x1F4C5; الحضور اليومي &#x2014; ${selMonth}</div>${dayRows}</div>
@@ -820,6 +875,7 @@ function renderEmployeePortalView(deptId,emp){
         <div class="tbl-wrap"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظة</th></tr></thead><tbody>${advRows}</tbody></table></div></div>`:''}
       ${bonArr.length?`<div class="card"><div class="card-title">&#x1F381; سجل المكافآت (${selMonth})</div>
         <div class="tbl-wrap"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظة</th></tr></thead><tbody>${bonRows}</tbody></table></div></div>`:''}
+      </div>
     </div>`;
 }
 
@@ -903,8 +959,16 @@ window.saveEmployeeRates=async function(deptId,empId){
   const name=document.getElementById('rate-name-'+empId)?.value.trim();
   const payType=document.getElementById('rate-paytype-'+empId)?.value||'daily';
   const ot=parseFloat(document.getElementById('rate-ot-'+empId).value||0);
+  const ratingRaw=document.getElementById('rate-rating-'+empId)?.value;
   if(!name){alert('ادخل اسم الموظف');return}
   const data={name,payType,overtimeRate:ot||0};
+  if(ratingRaw===''||ratingRaw==null)data.rating=null;
+  else{
+    let r=Math.round(parseFloat(ratingRaw));
+    if(isNaN(r)){alert('التقييم لازم يكون رقم من 1 لـ10');return}
+    r=Math.max(1,Math.min(10,r));
+    data.rating=r;
+  }
   if(payType==='monthly'){
     const monthly=parseFloat(document.getElementById('rate-monthly-'+empId).value);
     if(!monthly||monthly<=0){alert('ادخل المرتب الشهري');return}
@@ -1465,7 +1529,7 @@ function renderSalaryPage(deptId){
     const bonRows=bonArr.map(a=>`<tr><td>${a.date||''}</td><td>${fmt(a.amount)}</td><td>${a.note||'—'}</td><td><button class="btn btn-sm" onclick="deleteBonus('${deptId}','${emp.id}','${a.id}')">&#x00D7;</button></td></tr>`).join('');
     return `<div class="emp-card">
       <div class="emp-card-hd" onclick="toggleEmpCard('${emp.id}')">
-        <div style="flex:1;min-width:0"><div class="emp-name">&#x1F464; ${emp.name}</div>
+        <div style="flex:1;min-width:0"><div class="emp-name">&#x1F464; ${emp.name} ${emp.rating?`<span style="font-size:10.5px;font-weight:800;color:var(--gold);background:var(--gold-soft);padding:2px 8px;border-radius:10px;margin-right:4px">&#x2B50; ${emp.rating}/10</span>`:''}</div>
           <div class="emp-summary">${emp.payType==='monthly'?`شهري: ${fmt(emp.monthlySalary)}`:`يومية: ${fmt(emp.dailyRate)}`} | حضور: ${pDays}ي | صافي ${selMonth}: <strong style="color:${net>=0?'#1E6B4E':'#A8222F'}">${fmt(net)}</strong></div>
         </div>
         <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
@@ -1493,6 +1557,7 @@ function renderSalaryPage(deptId){
             <div style="flex:0 0 130px;${emp.payType==='monthly'?'display:none':''}" id="rate-daily-wrap-${emp.id}"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">سعر اليومية</label><input type="number" id="rate-daily-${emp.id}" value="${emp.dailyRate||0}" min="0"/></div>
             <div style="flex:0 0 130px;${emp.payType==='monthly'?'':'display:none'}" id="rate-monthly-wrap-${emp.id}"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">المرتب الشهري</label><input type="number" id="rate-monthly-${emp.id}" value="${emp.monthlySalary||0}" min="0"/></div>
             <div style="flex:0 0 130px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">سعر الأوفرتايم/ساعة</label><input type="number" id="rate-ot-${emp.id}" value="${emp.overtimeRate}" min="0"/></div>
+            <div style="flex:0 0 110px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">التقييم (من 10)</label><input type="number" id="rate-rating-${emp.id}" value="${emp.rating||''}" min="1" max="10" placeholder="—"/></div>
             <div style="display:flex;gap:6px;align-self:flex-end">
               <button class="btn btn-dark" onclick="saveEmployeeRates('${deptId}','${emp.id}')">حفظ</button>
               <button class="btn btn-sm" onclick="toggleRateEdit('${emp.id}')">إلغاء</button>
