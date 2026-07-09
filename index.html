@@ -220,6 +220,25 @@ tr:hover td{background:rgba(156,122,60,.04)}
 .chk{width:17px;height:17px;cursor:pointer;accent-color:var(--green);flex-shrink:0}
 .ot-inp{width:78px!important;padding:4px 8px!important;font-size:11.5px!important}
 
+/* ===== QUICK DAILY ATTENDANCE PANEL ===== */
+.qa-panel{background:linear-gradient(180deg,var(--gold-soft),var(--card) 60px)}
+.qa-list{display:flex;flex-direction:column;gap:2px}
+.qa-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 8px;border-radius:6px;border-bottom:1px solid var(--rule)}
+.qa-row:last-child{border-bottom:none}
+.qa-row.qa-present{background:var(--green-soft)}
+.qa-row.qa-holiday{opacity:.65}
+.qa-check-wrap{display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0}
+.qa-check-wrap .chk{width:21px;height:21px}
+.qa-name{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qa-badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.qa-badge-absent{background:var(--rule);color:var(--muted)}
+.qa-badge-holiday{background:#E9F1FA;color:#1A5E96}
+.qa-row .ot-inp{width:66px!important;flex-shrink:0}
+@media(max-width:700px){
+  .qa-name{font-size:12.5px}
+  .qa-row{padding:10px 6px}
+}
+
 /* ===== PROFESSIONAL POLISH: shadows & depth ===== */
 .card,.emp-card,.metric,.ss{box-shadow:0 1px 2px rgba(27,29,34,.04),0 1px 8px rgba(27,29,34,.03)}
 .card{transition:box-shadow .15s}
@@ -462,6 +481,16 @@ tr:hover td{background:rgba(156,122,60,.04)}
 
   /* user badge collapses, show role only via topnav title area on mobile */
   .user-badge{display:none}
+
+  /* ===== EASIER TOUCH INPUT: bigger tap targets, no iOS auto-zoom ===== */
+  input[type=number],input[type=text],input[type=date],input[type=time],input[type=password],select{
+    font-size:16px!important;padding:11px 12px!important;min-height:44px
+  }
+  .btn{min-height:44px;padding:10px 16px}
+  .btn-sm{min-height:38px;padding:8px 12px}
+  .chk{width:22px;height:22px}
+  .ord-check{width:21px;height:21px}
+  .ot-inp{min-height:36px!important}
 }
 
 @media(max-width:420px){
@@ -895,6 +924,7 @@ window.addEntry=async function(sec,pid,type){
   if(!amt||amt<=0){alert('ادخل مبلغ صحيح');return}
   await addDoc(collection(db,sec,pid,'entries'),{type,amount:amt,note,time:new Date().toLocaleString('ar-EG',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}),createdAt:serverTimestamp()});
   document.getElementById('amt-'+pid).value='';document.getElementById('note-'+pid).value='';
+  document.getElementById('amt-'+pid)?.focus();
   toast({buy:'&#x1F6D2; شراء',sell:'&#x1F4B0; بيع',pay:'&#x2705; سداد'}[type]||'&#x2705;');
 };
 window.deleteEntry=async function(sec,pid,eid){await deleteDoc(doc(db,sec,pid,'entries',eid));toast('&#x1F5D1; تم')};
@@ -1255,10 +1285,11 @@ let invLines=[{name:'',price:'',qty:''}];
 window.setCustEntryMode=function(mode){custEntryMode=mode;if(mode==='sell')invLines=[{name:'',price:'',qty:''}];renderCustomerDetail(curCustId)};
 
 function renderInvoiceBuilder(custId){
+  refreshInvoiceItemDatalist();
   const linesHTML=invLines.map((ln,i)=>{
     const total=(parseFloat(ln.price)||0)*(parseFloat(ln.qty)||0);
     return `<div class="inv-line">
-      <input type="text" placeholder="اسم البند" value="${ln.name}" oninput="updateInvLine(${i},'name',this.value)"/>
+      <input type="text" placeholder="اسم البند" list="dl-item-names" value="${ln.name}" oninput="onInvItemNameInput(${i},this.value)"/>
       <input type="number" placeholder="السعر" min="0" step="any" value="${ln.price}" oninput="updateInvLine(${i},'price',this.value)"/>
       <input type="number" placeholder="الكمية" min="0" step="any" value="${ln.qty}" oninput="updateInvLine(${i},'qty',this.value)"/>
       <span class="inv-line-total" id="inv-line-total-${i}">${fmt(total)}</span>
@@ -1320,6 +1351,8 @@ window.addCustomerPay=async function(custId){
   await addDoc(collection(db,'customers',custId,'entries'),{type:'pay',amount:amt,note,
     time:new Date().toLocaleString('ar-EG',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}),
     createdAt:serverTimestamp()});
+  document.getElementById('cust-pay-amt').value='';document.getElementById('cust-pay-note').value='';
+  document.getElementById('cust-pay-amt')?.focus();
   toast('&#x2705; تم تسجيل السداد');
 };
 
@@ -1485,6 +1518,38 @@ function renderPageContent(sec,pid){
       '<div class="tbl-wrap"><table><thead><tr><th>النوع</th><th>ملاحظة</th><th>التاريخ</th><th>المبلغ</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'}
   </div>`;
 }
+// Quick top-of-page panel: mark today's attendance for every employee in one
+// glance, without opening each employee card and scrolling through the month.
+function renderTodayAttendancePanel(deptId,empArr){
+  if(!empArr.length)return'';
+  const todayStr=today();
+  const todayAr=new Date(todayStr+'T00:00:00').toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const rows=empArr.map(emp=>{
+    const isFri=emp.payType==='monthly'&&isFriday(todayStr);
+    if(isFri){
+      return`<div class="qa-row qa-holiday">
+        <span class="qa-name">&#x1F464; ${emp.name}</span>
+        <span class="qa-badge qa-badge-holiday">&#x1F3D6;&#xFE0F; إجازة أسبوعية</span>
+      </div>`;
+    }
+    const att=emp.attendance?.[todayStr];const isP=att?.status==='present';const otVal=att?.overtime||0;
+    return`<div class="qa-row ${isP?'qa-present':''}">
+      <label class="qa-check-wrap">
+        <input type="checkbox" class="chk" ${isP?'checked':''} onchange="toggleDayCheck('${deptId}','${emp.id}','${todayStr}',this.checked)"/>
+        <span class="qa-name">${emp.name}</span>
+      </label>
+      ${isP?`<input type="number" class="ot-inp" value="${otVal}" min="0" step="0.5" placeholder="OT" onchange="saveOT('${deptId}','${emp.id}','${todayStr}')" title="ساعات الأوفرتايم"/>`:`<span class="qa-badge qa-badge-absent">لسه ماحضرش</span>`}
+    </div>`;
+  }).join('');
+  return`<div class="card qa-panel" style="margin-bottom:.85rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:.5rem">
+      <div class="card-title" style="margin:0">&#x2705; تسجيل حضور اليوم — ${todayAr}</div>
+      <button class="btn btn-sm" onclick="markAllPresentToday('${deptId}')">&#x2714;&#xFE0F; تحديد الكل حاضر</button>
+    </div>
+    <div class="qa-list">${rows}</div>
+  </div>`;
+}
+
 function renderSalaryPage(deptId){
   const dept=pages.salaries[deptId];if(!dept)return;
   let el=document.getElementById('salaries-page-'+deptId);
@@ -1601,6 +1666,7 @@ function renderSalaryPage(deptId){
       <span class="pname" id="snd-${deptId}" onclick="renameSalaryDept('${deptId}')">${dept.name}</span>
       <input class="pname-inp" id="sni-${deptId}" onblur="finishRenameSalaryDept('${deptId}')" onkeydown="if(event.key==='Enter')finishRenameSalaryDept('${deptId}')"/>
     </div>
+    ${renderTodayAttendancePanel(deptId,empArr)}
     ${empArr.length?`<div class="sal-stats">
       <div class="ss"><div class="ss-label">&#x1F464;&#x200D;&#x1F464; الموظفين</div><div class="ss-val">${empArr.length}</div></div>
       <div class="ss"><div class="ss-label">&#x1F4B0; إجمالي المرتبات</div><div class="ss-val" style="color:#1A5E96">${fmt(tBase)}</div></div>
@@ -1633,10 +1699,36 @@ function renderSalaryPage(deptId){
         <button class="btn btn-dark" onclick="addEmployee('${deptId}')">إضافة</button>
       </div>
     </div>
-    ${empArr.length===0?'<p style="text-align:center;color:#bbb;padding:2rem;font-size:13px">لا يوجد موظفين بعد &#x261D;</p>':empsHTML}`;
+    ${empArr.length>3?`<div style="margin-bottom:.7rem"><input type="text" id="emp-search-${deptId}" placeholder="&#x1F50D; بحث عن موظف بالاسم..." oninput="filterEmpCards('${deptId}',this.value)"/></div>`:''}
+    ${empArr.length===0?'<p style="text-align:center;color:#bbb;padding:2rem;font-size:13px">لا يوجد موظفين بعد &#x261D;</p>':`<div id="emp-cards-${deptId}">${empsHTML}</div>`}`;
 }
 window.selectMonth=function(deptId,month){curMonth[deptId]=month;renderSalaryPage(deptId)};
 window.toggleEmpCard=function(empId){const b=document.getElementById('ebody-'+empId);const a=document.getElementById('earr-'+empId);if(!b)return;b.classList.toggle('open');if(a)a.textContent=b.classList.contains('open')?'&#x25B4;':'&#x25BE;'};
+// One tap to mark every eligible employee present for today (skips Friday-off
+// monthly staff and anyone already marked present) — saves opening each card.
+window.markAllPresentToday=async function(deptId){
+  const todayStr=today();
+  const emps=Object.values(employees[deptId]||{});
+  const b=writeBatch(db);
+  let count=0;
+  emps.forEach(emp=>{
+    if(emp.payType==='monthly'&&isFriday(todayStr))return;
+    if(emp.attendance?.[todayStr]?.status==='present')return;
+    b.set(doc(db,'salaries',deptId,'employees',emp.id,'attendance',todayStr),{date:todayStr,status:'present',overtime:0,startTime:'',endTime:'',createdAt:serverTimestamp()});
+    count++;
+  });
+  if(count===0){toast('&#x2705; الكل متسجل حاضر بالفعل');return}
+  await b.commit();
+  toast(`&#x2705; تم تسجيل حضور ${count} موظف`);
+};
+window.filterEmpCards=function(deptId,val){
+  const container=document.getElementById('emp-cards-'+deptId);if(!container)return;
+  const term=val.trim().toLowerCase();
+  container.querySelectorAll('.emp-card').forEach(card=>{
+    const name=card.querySelector('.emp-name')?.textContent.toLowerCase()||'';
+    card.style.display=(!term||name.includes(term))?'':'none';
+  });
+};
 
 
 // ========== ORDERS ==========
@@ -1671,11 +1763,12 @@ window.renderOrdersPage=function(){
     items.filter(i=>!i.done).forEach(i=>pendingCarry.push({...i,carriedFrom:date}));
   });
 
+  refreshOrderNameDatalist();
   const addFormHTML=`<div class="card" style="margin-bottom:.85rem">
     <div class="card-title">&#x1F4CB; إضافة طلب ليوم: ${todayAr}</div>
     <div class="input-row">
-      <div style="flex:2;min-width:100px"><input type="text" id="ord-name" placeholder="اسم الطلب"/></div>
-      <div style="flex:0 0 80px"><input type="number" id="ord-qty" placeholder="الكمية" min="1"/></div>
+      <div style="flex:2;min-width:100px"><input type="text" id="ord-name" list="dl-order-names" placeholder="اسم الطلب"/></div>
+      <div style="flex:0 0 80px"><input type="number" id="ord-qty" placeholder="الكمية" min="1" value="1"/></div>
       <div style="flex:2;min-width:80px"><input type="text" id="ord-note" placeholder="ملاحظة (اختياري)"/></div>
       <button class="btn btn-dark" onclick="addOrder('${todayStr}')">+ إضافة</button>
     </div>
@@ -1747,7 +1840,8 @@ window.addOrder=async function(date){
   const note=document.getElementById('ord-note').value.trim();
   if(!name){alert('اكتب اسم الطلب');return}
   await addDoc(collection(db,'orders'),{name,qty:qty||1,note,date,done:false,createdAt:serverTimestamp()});
-  document.getElementById('ord-name').value='';document.getElementById('ord-qty').value='';document.getElementById('ord-note').value='';
+  document.getElementById('ord-name').value='';document.getElementById('ord-qty').value='1';document.getElementById('ord-note').value='';
+  document.getElementById('ord-name')?.focus();
   toast('&#x1F4CB; تم إضافة الطلب');
 };
 
@@ -1841,6 +1935,7 @@ window.addExpense=async function(){
   if(type==='out')payload.source=source;
   await addDoc(collection(db,'expenses'),payload);
   document.getElementById('exp-amt').value='';document.getElementById('exp-note').value='';
+  document.getElementById('exp-amt')?.focus();
   toast(type==='in'?'&#x1F4B0; تم تسجيل المستلم':(source==='safe'?'&#x1F510; تم الصرف من الخزنة':'&#x1F4B8; تم تسجيل المصروف العام'));
 };
 
@@ -1852,6 +1947,7 @@ window.selectExpMonth=function(month){curExpMonth=month;renderExpensesPage()};
 
 window.renderExpensesPage=function(){
   const el=document.getElementById('expenses-content');if(!el)return;
+  refreshExpenseNoteDatalist();
   const monthsList=getExpenseMonths();
   const selMonth=curExpMonth||monthsList[0];
 
@@ -1914,7 +2010,7 @@ window.renderExpensesPage=function(){
           ${Object.entries(EXP_CATEGORIES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}
         </select>
         <div style="flex:0 0 110px"><input type="number" id="exp-amt" placeholder="المبلغ" min="0"/></div>
-        <div style="flex:1;min-width:90px"><input type="text" id="exp-note" placeholder="ملاحظة (اختياري)"/></div>
+        <div style="flex:1;min-width:90px"><input type="text" id="exp-note" list="dl-expense-notes" placeholder="ملاحظة (اختياري)"/></div>
         <button class="btn btn-dark" onclick="addExpense()">+ تسجيل</button>
       </div>
       <div id="exp-source-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--rule)">
@@ -1989,6 +2085,86 @@ window.printExitPermit=function(){
   window.print();
   setTimeout(()=>document.body.classList.remove('printing-exit-permit'),500);
 };
+
+// ========== UX: ENTER-KEY FIELD NAVIGATION ==========
+// Pressing Enter inside any form field moves to the next field automatically.
+// On the last field of a toolbar that has exactly one action button, Enter clicks it.
+// Fields that already manage their own Enter behavior (rename inputs) are skipped.
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  const el=e.target;
+  if(el.hasAttribute('onkeydown'))return; // already handled inline (rename fields)
+  if(!el.matches('input[type=text],input[type=number],input[type=date],input[type=time],input[type=password],select'))return;
+
+  // invoice line builder: Enter adds a new line and jumps to its name field
+  const invLine=el.closest('.inv-line');
+  if(invLine){
+    e.preventDefault();
+    const fieldsInLine=Array.from(invLine.querySelectorAll('input'));
+    const fieldIdx=fieldsInLine.indexOf(el);
+    if(fieldIdx<fieldsInLine.length-1){const nx=fieldsInLine[fieldIdx+1];nx.focus();nx.select?.();return}
+    const lines=Array.from(document.querySelectorAll('#inv-lines-container .inv-line'));
+    const lineIdx=lines.indexOf(invLine);
+    if(lineIdx===lines.length-1){
+      window.addInvLine();
+      setTimeout(()=>{const newLines=document.querySelectorAll('#inv-lines-container .inv-line');newLines[newLines.length-1]?.querySelector('input')?.focus()},0);
+    }else{
+      lines[lineIdx+1]?.querySelector('input')?.focus();
+    }
+    return;
+  }
+
+  const container=el.closest('.erp-entry-toolbar,.rate-edit-row,.input-row')||el.parentElement;
+  if(!container)return;
+  const focusables=Array.from(container.querySelectorAll('input[type=text],input[type=number],input[type=date],input[type=time],input[type=password],select'));
+  const buttons=Array.from(container.querySelectorAll('button.btn'));
+  const idx=focusables.indexOf(el);
+  if(idx===-1)return;
+  e.preventDefault();
+  if(idx<focusables.length-1){const nx=focusables[idx+1];nx.focus();nx.select?.();return}
+  if(buttons.length===1)buttons[0].click();
+});
+
+// ========== UX: AUTOCOMPLETE DATALISTS ==========
+// Builds/refreshes a <datalist> from a list of values, reused across renders.
+function ensureDatalist(id,values){
+  let dl=document.getElementById(id);
+  if(!dl){dl=document.createElement('datalist');dl.id=id;document.body.appendChild(dl)}
+  dl.innerHTML=[...new Set(values.filter(Boolean))].map(v=>`<option value="${v.replace(/"/g,'&quot;')}"></option>`).join('');
+}
+// item name -> most recently used price, gathered from every customer's saved invoices
+function getInvoiceItemHistory(){
+  const map={};
+  Object.values(pages.customers||{}).forEach(page=>{
+    Object.values(page.entries||{}).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)).forEach(entry=>{
+      (entry.items||[]).forEach(it=>{if(it.name)map[it.name]={price:it.price,qty:it.qty}});
+    });
+  });
+  return map;
+}
+function refreshInvoiceItemDatalist(){
+  const hist=getInvoiceItemHistory();
+  ensureDatalist('dl-item-names',Object.keys(hist));
+  return hist;
+}
+window.onInvItemNameInput=function(i,val){
+  window.updateInvLine(i,'name',val);
+  const hist=getInvoiceItemHistory();
+  if(hist[val]&&(!invLines[i].price||parseFloat(invLines[i].price)===0)){
+    const priceInput=document.querySelector(`#inv-lines-container .inv-line:nth-child(${i+1}) input[type=number]`);
+    if(priceInput){priceInput.value=hist[val].price;window.updateInvLine(i,'price',hist[val].price)}
+  }
+};
+function refreshOrderNameDatalist(){
+  const names=new Set();
+  Object.values(ordersData||{}).forEach(d=>Object.values(d.items||{}).forEach(i=>{if(i.name)names.add(i.name)}));
+  ensureDatalist('dl-order-names',[...names]);
+}
+function refreshExpenseNoteDatalist(){
+  const notes=new Set();
+  Object.values(expensesData||{}).forEach(e=>{if(e.note)notes.add(e.note)});
+  ensureDatalist('dl-expense-notes',[...notes]);
+}
 
 listenSection('debtors');listenSection('customers');listenSalaryDepts();
 listenOrders();listenExpenses();
