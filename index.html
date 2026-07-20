@@ -464,58 +464,85 @@ tr:hover td{background:rgba(156,122,60,.04)}
 }
 
 /* ===== QUOTATION (عرض سعر) ===== */
-.quote-wrap{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+.quote-page-layout{display:flex;gap:1.2rem;padding:1.3rem 1.4rem;align-items:flex-start}
+.quote-side-panel{width:250px;flex-shrink:0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:1rem .85rem;position:sticky;top:78px}
+.quote-side-title{font-size:11px;font-weight:700;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;margin:1rem 0 .6rem}
+.quote-side-list{display:flex;flex-direction:column;gap:7px;max-height:calc(100vh - 240px);overflow-y:auto}
+.quote-side-item{border:1px solid var(--rule);border-radius:6px;padding:.55rem .65rem;cursor:pointer;transition:border-color .15s,background .15s}
+.quote-side-item:hover{border-color:var(--gold)}
+.quote-side-item.active{border-color:var(--gold);background:var(--gold-soft)}
+.qsi-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.qsi-name{font-size:12.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qsi-sub{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:4px}
+.qsi-total{font-weight:700;color:var(--gold);font-family:'Zilla Slab',serif}
+.quote-side-empty{font-size:11.5px;color:var(--muted-2);text-align:center;padding:1rem .3rem;line-height:1.7}
+.quote-main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center}
+
 .quote-toolbar{width:100%;max-width:800px;display:flex;justify-content:flex-end;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-.quote-doc{width:100%;max-width:800px;background:#fff;border:1px solid var(--rule);border-radius:4px;padding:2.2rem 2.2rem 2.6rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.quote-doc-logo{display:block;max-width:150px;margin:0 auto .6rem}
+.quote-doc{width:100%;max-width:800px;background:#fff;border:1px solid var(--rule);border-radius:8px;padding:2.3rem 2.3rem 2rem;box-shadow:0 2px 10px rgba(27,29,34,.07);position:relative;overflow:hidden}
+.quote-doc-topbar{position:absolute;top:0;right:0;left:0;height:6px;background:linear-gradient(90deg,var(--gold),#C9A96A,var(--gold))}
+.qdoc-badge{position:absolute;top:18px;left:18px;font-size:9.5px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.02em}
+.qdoc-badge.saved{background:var(--green-soft);color:var(--green)}
+.qdoc-badge.draft{background:var(--gold-soft);color:var(--gold)}
+.quote-doc-logo{display:block;max-width:150px;margin:.8rem auto .6rem}
 .quote-doc-company{text-align:center;font-family:'Zilla Slab',serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:2px;line-height:1.4}
 .quote-doc-tagline{text-align:center;font-size:10.5px;color:var(--muted);letter-spacing:.08em;margin-bottom:1.4rem}
 .quote-rule{height:2px;background:var(--gold);width:60px;margin:0 auto 1.5rem}
 .quote-title{text-align:center;font-family:'Zilla Slab',serif;font-size:21px;font-weight:800;color:var(--ink);margin-bottom:1.6rem;letter-spacing:.03em}
-.quote-meta-row{display:flex;justify-content:space-between;gap:1.6rem;margin-bottom:2rem;flex-wrap:wrap}
-.quote-meta-item{flex:1;min-width:180px}
-.quote-meta-item .lbl{font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.03em}
-.quote-meta-item input{width:100%;border:none;border-bottom:1.5px solid var(--rule-strong);background:transparent;padding:4px 2px;font-size:14px;font-weight:700;color:var(--ink);font-family:inherit}
+.quote-meta-row{display:flex;justify-content:space-between;gap:1.4rem;margin-bottom:2rem;flex-wrap:wrap;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:1rem 1.1rem}
+.quote-meta-item{flex:1;min-width:150px}
+.quote-meta-item .lbl{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.03em}
+.quote-meta-item input{width:100%;border:none;border-bottom:1.5px solid var(--rule-strong);background:transparent;padding:4px 2px;font-size:13.5px;font-weight:700;color:var(--ink);font-family:inherit}
 .quote-meta-item input:focus{outline:none;border-bottom-color:var(--gold)}
-.quote-table-wrap{overflow-x:auto}
-.quote-table{width:100%;border-collapse:collapse;margin-bottom:.4rem;min-width:520px}
-.quote-table th{background:var(--ink);color:#fff;font-size:11px;font-weight:700;padding:9px 8px;text-align:center}
+.quote-table-wrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px}
+.quote-table{width:100%;border-collapse:collapse;min-width:520px}
+.quote-table th{background:var(--ink);color:#fff;font-size:11px;font-weight:700;padding:10px 8px;text-align:center}
+.quote-table tbody tr:nth-child(even){background:var(--paper)}
 .quote-table td{padding:6px 6px;border-bottom:1px solid var(--rule);font-size:12.5px;text-align:center;vertical-align:middle}
+.quote-table tbody tr:last-child td{border-bottom:none}
 .quote-table td input{width:100%;border:none;background:transparent;text-align:center;font-size:12.5px;font-family:inherit;padding:5px 4px;color:var(--ink)}
 .quote-table td input:focus{outline:none;background:var(--gold-soft);border-radius:3px}
-.quote-table td.qt-item-cell input{text-align:right}
+.quote-table td.qt-item-cell{padding:2px 6px}
+.quote-table td.qt-item-cell textarea{width:100%;border:none;background:transparent;text-align:right;font-size:12.5px;font-family:inherit;padding:6px 4px;color:var(--ink);resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;line-height:1.5;min-height:20px;display:block}
+.quote-table td.qt-item-cell textarea:focus{outline:none;background:var(--gold-soft);border-radius:3px}
 .quote-table .qt-num{width:34px;color:var(--muted);font-weight:700}
 .quote-table .qt-total-cell{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
 .quote-table .qt-del{width:30px}
 .qt-del-btn{background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:16px;line-height:1}
 .qt-del-btn:hover{color:var(--red)}
-.quote-add-row{margin:.4rem 0 1.4rem}
-.quote-grand-row{display:flex;justify-content:flex-end;align-items:baseline;gap:14px;padding:.9rem 0;border-top:2px solid var(--ink);margin-bottom:1.7rem}
-.quote-grand-label{font-size:13px;font-weight:700;color:var(--ink)}
-.quote-grand-val{font-size:21px;font-weight:800;font-family:'Zilla Slab',serif;color:var(--gold)}
-.quote-notes{margin-top:.6rem}
+.quote-add-row{margin:.55rem 0 1.4rem}
+.quote-grand-row{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;padding:1rem 1.1rem;background:var(--ink);border-radius:6px;margin-bottom:1.8rem}
+.quote-grand-label{font-size:12.5px;font-weight:700;color:#C8C4B8}
+.quote-grand-val{font-size:22px;font-weight:800;font-family:'Zilla Slab',serif;color:#F5D998}
+.quote-grand-cur{font-size:11px;font-weight:700;color:#C8C4B8}
+.quote-notes{margin-top:.4rem;margin-bottom:1.8rem}
 .quote-notes-title{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:.7rem;display:flex;align-items:center;gap:6px}
 .quote-note-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .quote-note-num{flex-shrink:0;font-size:11.5px;color:var(--gold);font-weight:800;width:16px}
 .quote-note-row input{flex:1;border:none;border-bottom:1px solid var(--rule);background:transparent;padding:6px 2px;font-size:12.5px;font-family:inherit;color:var(--ink)}
 .quote-note-row input:focus{outline:none;border-bottom-color:var(--gold)}
-.quote-list-toolbar{width:100%;max-width:800px;display:flex;justify-content:flex-start;margin-bottom:1rem}
-.quote-list{display:flex;flex-direction:column;gap:8px}
-.quote-card{background:var(--card);border:1px solid var(--rule);border-top:2px solid var(--rule-strong);border-radius:6px;padding:.85rem 1rem;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s,background .15s}
-.quote-card:hover{background:var(--gold-soft);border-color:var(--gold)}
-.quote-card-main{flex:1;min-width:0}
-.quote-card-client{font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.quote-card-date{font-size:11px;color:var(--muted);margin-top:2px}
-.quote-card-total{font-size:14.5px;font-weight:800;font-family:'Zilla Slab',serif;color:var(--gold);white-space:nowrap;flex-shrink:0}
-.quote-card-del{font-size:16px;flex-shrink:0}
+.quote-footer{border-top:1px solid var(--rule);padding-top:1.4rem;margin-top:1rem}
+.quote-sign-row{display:flex;justify-content:space-between;gap:2rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.quote-sign-box{flex:1;min-width:180px;text-align:center}
+.quote-sign-line{border-bottom:1.5px solid var(--ink);height:44px;margin-bottom:8px}
+.quote-sign-label{font-size:11.5px;font-weight:600;color:var(--muted)}
+.quote-footer-note{text-align:center;font-size:10.5px;color:var(--muted-2);line-height:1.7}
 @media print{
-  .quote-wrap{padding:0}
+  .quote-page-layout{padding:0;display:block}
+  .quote-side-panel{display:none!important}
+  .quote-main{width:100%}
   .quote-doc{box-shadow:none;border:none;max-width:100%}
   .quote-table{min-width:0}
+  .qdoc-badge{display:none!important}
+}
+@media(max-width:900px){
+  .quote-page-layout{flex-direction:column}
+  .quote-side-panel{width:100%;position:static}
+  .quote-side-list{max-height:220px}
 }
 @media(max-width:700px){
-  .quote-doc{padding:1.5rem 1.1rem 1.8rem}
-  .quote-meta-row{gap:1rem}
+  .quote-doc{padding:1.6rem 1.1rem 1.6rem}
+  .quote-meta-row{gap:1rem;padding:.8rem .9rem}
   .quote-doc-company{font-size:14px}
 }
 
@@ -533,7 +560,7 @@ tr:hover td{background:rgba(156,122,60,.04)}
   body.printing-quote #main-wrap,
   body.printing-quote #section-quote{display:block!important;margin:0!important;padding:0!important}
   .quote-toolbar,.qt-del-btn,.quote-add-row,.quote-notes .btn{display:none!important}
-  .quote-meta-item input,.quote-table td input,.quote-note-row input{border:none!important;background:transparent!important}
+  .quote-meta-item input,.quote-table td input,.quote-table td textarea,.quote-note-row input{border:none!important;background:transparent!important}
 }
 .print-invoice{display:none;padding:1.5rem;font-size:13px;font-family:'Cairo',sans-serif}
 .print-invoice h2{text-align:center;margin-bottom:.5rem;font-family:'Zilla Slab',serif}
@@ -902,7 +929,7 @@ window.switchSection=function(sec,btn){
   if(sec==='orders')renderOrdersPage();
   if(sec==='expenses')renderExpensesPage();
   if(sec==='exitpermit')renderExitPermit();
-  if(sec==='quote'){quoteView='list';renderQuotePage()}
+  if(sec==='quote')renderQuotePage();
   if(sec==='stats')renderStatsPage();
   renderSidebar();
 };
@@ -2408,64 +2435,63 @@ window.printExitPermit=function(){
   setTimeout(()=>document.body.classList.remove('printing-exit-permit'),500);
 };
 
-// ========== QUOTATION BUILDER (عرض سعر) ==========
-let quotesData={}; // id -> saved quote doc
-let quoteView='list'; // 'list' | 'editor'
-let currentQuoteId=null; // null = new/unsaved quote
+// ========== QUOTATION BUILDER (عرض سعر) — persisted to Firestore ==========
+let quotesData={};
+let curQuoteId=null;
 let quoteLines=[{name:'',price:'',qty:''}];
 let quoteNotes=[''];
-let quoteMeta={client:'',date:today()};
-
-window.updateQuoteMeta=function(field,val){quoteMeta[field]=val};
+let quoteMeta={client:'',date:today(),validUntil:''};
 
 function listenQuotes(){
   onSnapshot(query(collection(db,'quotes'),orderBy('createdAt','desc')),snap=>{
     quotesData={};
     snap.docs.forEach(d=>{quotesData[d.id]={id:d.id,...d.data()}});
-    if(curSection==='quote')renderQuotePage();
+    if(curSection==='quote')renderQuoteSideList();
   });
 }
 
+function quoteTotal(q){return(q.lines||[]).reduce((s,l)=>s+(parseFloat(l.price)||0)*(parseFloat(l.qty)||0),0)}
+window.autoSizeQtField=function(el){el.style.height='auto';el.style.height=el.scrollHeight+'px'};
+
 window.renderQuotePage=function(){
   const el=document.getElementById('quote-content');if(!el)return;
-  if(quoteView==='list'){renderQuoteListView(el);return}
-  renderQuoteEditorView(el);
+  el.innerHTML=`
+    <div class="quote-page-layout">
+      <div class="quote-side-panel" id="quote-side-panel"></div>
+      <div class="quote-main" id="quote-main"></div>
+    </div>`;
+  renderQuoteSideList();
+  renderQuoteDoc();
 };
 
-function renderQuoteListView(el){
-  const list=Object.values(quotesData).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-  const itemsHTML=list.length?list.map(q=>{
-    const total=q.grandTotal!=null?q.grandTotal:(q.lines||[]).reduce((s,l)=>s+(parseFloat(l.price)||0)*(parseFloat(l.qty)||0),0);
-    const dateAr=q.date?new Date(q.date+'T00:00:00').toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'}):'';
-    return `<div class="quote-card" onclick="openQuoteFromList('${q.id}')">
-      <div class="quote-card-main">
-        <div class="quote-card-client">${q.client?q.client:'بدون اسم عميل'}</div>
-        <div class="quote-card-date">${dateAr}</div>
+function renderQuoteSideList(){
+  const panel=document.getElementById('quote-side-panel');if(!panel)return;
+  const arr=Object.values(quotesData||{}).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  const itemsHTML=arr.length?arr.map(q=>{
+    const title=(q.client||'').trim()||'بدون اسم';
+    return `<div class="quote-side-item ${q.id===curQuoteId?'active':''}" onclick="loadQuote('${q.id}')">
+      <div class="qsi-top">
+        <span class="qsi-name">${title}</span>
+        <button class="btn-x no-print" onclick="event.stopPropagation();deleteQuoteSaved('${q.id}')" title="حذف">&#x00D7;</button>
       </div>
-      <div class="quote-card-total">${fmt(total)} ج.م</div>
-      <button class="btn-x quote-card-del" onclick="event.stopPropagation();deleteQuoteFromList('${q.id}')" title="حذف">&#x1F5D1;</button>
+      <div class="qsi-sub"><span>${q.date||''}</span><span class="qsi-total">${fmt(quoteTotal(q))}</span></div>
     </div>`;
-  }).join(''):'<p style="color:#bbb;font-size:12.5px;text-align:center;padding:2rem">لا يوجد عروض أسعار محفوظة بعد</p>';
-
-  el.innerHTML=`
-    <div class="quote-wrap">
-      <div class="quote-list-toolbar no-print">
-        <button class="btn btn-dark" onclick="newQuoteFromList()">+ عرض سعر جديد</button>
-      </div>
-      <div class="quote-list" style="width:100%;max-width:800px">
-        ${itemsHTML}
-      </div>
-    </div>`;
+  }).join(''):'<p class="quote-side-empty">لا يوجد عروض أسعار محفوظة بعد<br/>ابدأ عرض جديد واحفظه ليظهر هنا</p>';
+  panel.innerHTML=`
+    <button class="btn-new no-print" onclick="newQuoteDraft()">+ عرض سعر جديد</button>
+    <div class="quote-side-title">العروض المحفوظة</div>
+    <div class="quote-side-list">${itemsHTML}</div>`;
 }
 
-function renderQuoteEditorView(el){
+function renderQuoteDoc(){
+  const el=document.getElementById('quote-main');if(!el)return;
   const logoSrc=document.querySelector('.topnav-logo')?.src||'';
 
   const linesHTML=quoteLines.map((ln,i)=>{
     const total=(parseFloat(ln.price)||0)*(parseFloat(ln.qty)||0);
     return `<tr>
       <td class="qt-num">${i+1}</td>
-      <td class="qt-item-cell"><input type="text" placeholder="اسم الصنف" value="${ln.name}" oninput="updateQuoteLine(${i},'name',this.value)"/></td>
+      <td class="qt-item-cell"><textarea rows="1" placeholder="اسم الصنف" oninput="updateQuoteLine(${i},'name',this.value);autoSizeQtField(this)">${ln.name}</textarea></td>
       <td><input type="number" min="0" step="any" placeholder="0" value="${ln.price}" oninput="updateQuoteLine(${i},'price',this.value)"/></td>
       <td><input type="number" min="0" step="any" placeholder="0" value="${ln.qty}" oninput="updateQuoteLine(${i},'qty',this.value)"/></td>
       <td class="qt-total-cell" id="qt-line-total-${i}">${fmt(total)}</td>
@@ -2480,59 +2506,83 @@ function renderQuoteEditorView(el){
     <button class="qt-del-btn no-print" onclick="removeQuoteNote(${i})" title="حذف الملاحظة" ${quoteNotes.length>1?'':'style="visibility:hidden"'}>&#x00D7;</button>
   </div>`).join('');
 
+  const isSaved=!!(curQuoteId&&quotesData[curQuoteId]);
+  const badgeHTML=isSaved
+    ?`<span class="qdoc-badge saved">&#x2705; محفوظ &#183; #${curQuoteId.slice(-5).toUpperCase()}</span>`
+    :`<span class="qdoc-badge draft">&#x270F;&#xFE0F; مسودة غير محفوظة</span>`;
+
   el.innerHTML=`
-    <div class="quote-wrap">
-      <div class="quote-toolbar no-print">
-        <button class="btn no-print" onclick="backToQuoteList()">&#x2190; رجوع للقائمة</button>
-        <button class="btn btn-dark no-print" onclick="saveQuote()">&#x1F4BE; حفظ عرض السعر</button>
-        <button class="btn btn-dark no-print" onclick="printQuote()">&#x1F5A8; طباعة عرض السعر</button>
+    <div class="quote-toolbar no-print">
+      <button class="btn btn-dark no-print" onclick="saveQuote()">&#x1F4BE; ${isSaved?'تحديث الحفظ':'حفظ العرض'}</button>
+      <button class="btn no-print" onclick="printQuote()">&#x1F5A8; طباعة عرض السعر</button>
+    </div>
+    <div class="quote-doc" id="quote-doc">
+      <div class="quote-doc-topbar"></div>
+      ${badgeHTML}
+      <img class="quote-doc-logo" src="${logoSrc}" alt="Trust Group"/>
+      <div class="quote-doc-company">شركة تراست جروب للتوريدات وتصنيع خطوط الإنتاج</div>
+      <div class="quote-doc-tagline">TRUST GROUP &#183; SUPPLIES &amp; PRODUCTION LINES MANUFACTURING</div>
+      <div class="quote-rule"></div>
+      <div class="quote-title">عرض سعر</div>
+
+      <div class="quote-meta-row">
+        <div class="quote-meta-item">
+          <div class="lbl">التاريخ</div>
+          <input type="date" value="${quoteMeta.date}" oninput="quoteMeta.date=this.value" onchange="quoteMeta.date=this.value"/>
+        </div>
+        <div class="quote-meta-item">
+          <div class="lbl">مقدم إلى (اسم الشركة / العميل)</div>
+          <input type="text" placeholder="اسم الشركة أو العميل" value="${quoteMeta.client}" oninput="quoteMeta.client=this.value"/>
+        </div>
+        <div class="quote-meta-item">
+          <div class="lbl">العرض صالح حتى</div>
+          <input type="date" value="${quoteMeta.validUntil}" oninput="quoteMeta.validUntil=this.value" onchange="quoteMeta.validUntil=this.value"/>
+        </div>
       </div>
-      <div class="quote-doc" id="quote-doc">
-        <img class="quote-doc-logo" src="${logoSrc}" alt="Trust Group"/>
-        <div class="quote-doc-company">شركة تراست جروب للتوريدات العمومية والمقاولات العامة</div>
-        <div class="quote-doc-tagline">TRUST GROUP &#183; GENERAL SUPPLIES &amp; CONTRACTING</div>
-        <div class="quote-rule"></div>
-        <div class="quote-title">عرض سعر</div>
 
-        <div class="quote-meta-row">
-          <div class="quote-meta-item">
-            <div class="lbl">التاريخ</div>
-            <input type="date" value="${quoteMeta.date}" oninput="updateQuoteMeta('date',this.value)" onchange="updateQuoteMeta('date',this.value)"/>
+      <div class="quote-table-wrap">
+        <table class="quote-table">
+          <thead><tr>
+            <th style="width:36px">م</th>
+            <th>البند</th>
+            <th style="width:95px">السعر</th>
+            <th style="width:80px">الكمية</th>
+            <th style="width:105px">الإجمالي</th>
+            <th class="no-print" style="width:30px"></th>
+          </tr></thead>
+          <tbody id="quote-lines-body">${linesHTML}</tbody>
+        </table>
+      </div>
+      <div class="quote-add-row no-print"><button class="btn btn-sm" onclick="addQuoteLine()">+ إضافة بند</button></div>
+
+      <div class="quote-grand-row">
+        <span class="quote-grand-label">إجمالي البنود</span>
+        <span class="quote-grand-val" id="quote-grand-total">${fmt(grandTotal)}</span>
+        <span class="quote-grand-cur">ج.م</span>
+      </div>
+
+      <div class="quote-notes">
+        <div class="quote-notes-title">&#x1F4CC; ملاحظات</div>
+        <div id="quote-notes-body">${notesHTML}</div>
+        <button class="btn btn-sm no-print" onclick="addQuoteNote()">+ إضافة ملاحظة</button>
+      </div>
+
+      <div class="quote-footer">
+        <div class="quote-sign-row">
+          <div class="quote-sign-box">
+            <div class="quote-sign-line"></div>
+            <div class="quote-sign-label">إعداد &#183; Trust Group</div>
           </div>
-          <div class="quote-meta-item">
-            <div class="lbl">مقدم إلى (اسم الشركة / العميل)</div>
-            <input type="text" placeholder="اسم الشركة أو العميل" value="${quoteMeta.client}" oninput="updateQuoteMeta('client',this.value)"/>
+          <div class="quote-sign-box">
+            <div class="quote-sign-line"></div>
+            <div class="quote-sign-label">اعتماد العميل</div>
           </div>
         </div>
-
-        <div class="quote-table-wrap">
-          <table class="quote-table">
-            <thead><tr>
-              <th style="width:36px">م</th>
-              <th>البند</th>
-              <th style="width:95px">السعر</th>
-              <th style="width:80px">الكمية</th>
-              <th style="width:105px">الإجمالي</th>
-              <th class="no-print" style="width:30px"></th>
-            </tr></thead>
-            <tbody id="quote-lines-body">${linesHTML}</tbody>
-          </table>
-        </div>
-        <div class="quote-add-row no-print"><button class="btn btn-sm" onclick="addQuoteLine()">+ إضافة بند</button></div>
-
-        <div class="quote-grand-row">
-          <span class="quote-grand-label">إجمالي البنود</span>
-          <span class="quote-grand-val" id="quote-grand-total">${fmt(grandTotal)}</span>
-        </div>
-
-        <div class="quote-notes">
-          <div class="quote-notes-title">&#x1F4CC; ملاحظات</div>
-          <div id="quote-notes-body">${notesHTML}</div>
-          <button class="btn btn-sm no-print" onclick="addQuoteNote()">+ إضافة ملاحظة</button>
-        </div>
+        <div class="quote-footer-note">شكراً لثقتكم في شركة تراست جروب &#8212; هذا العرض غير ملزم إلا بعد الاعتماد الرسمي من الطرفين</div>
       </div>
     </div>`;
-};
+  el.querySelectorAll('.qt-item-cell textarea').forEach(autoSizeQtField);
+}
 
 window.updateQuoteLine=function(i,field,val){
   if(!quoteLines[i])return;
@@ -2545,66 +2595,75 @@ window.updateQuoteLine=function(i,field,val){
   const gt=document.getElementById('quote-grand-total');
   if(gt)gt.textContent=fmt(grandTotal);
 };
-window.addQuoteLine=function(){quoteLines.push({name:'',price:'',qty:''});renderQuotePage()};
-window.removeQuoteLine=function(i){if(quoteLines.length<=1)return;quoteLines.splice(i,1);renderQuotePage()};
+window.addQuoteLine=function(){quoteLines.push({name:'',price:'',qty:''});renderQuoteDoc()};
+window.removeQuoteLine=function(i){if(quoteLines.length<=1)return;quoteLines.splice(i,1);renderQuoteDoc()};
 
 window.updateQuoteNote=function(i,val){if(typeof quoteNotes[i]!=='undefined')quoteNotes[i]=val};
-window.addQuoteNote=function(){quoteNotes.push('');renderQuotePage()};
+window.addQuoteNote=function(){quoteNotes.push('');renderQuoteDoc()};
 window.removeQuoteNote=function(i){
-  if(quoteNotes.length<=1){quoteNotes[0]='';renderQuotePage();return}
-  quoteNotes.splice(i,1);renderQuotePage();
+  if(quoteNotes.length<=1){quoteNotes[0]='';renderQuoteDoc();return}
+  quoteNotes.splice(i,1);renderQuoteDoc();
 };
 
-window.newQuoteFromList=function(){
-  currentQuoteId=null;
+function hasDraftContent(){
+  return quoteLines.some(l=>(l.name||'').trim()||parseFloat(l.price)>0||parseFloat(l.qty)>0)
+    ||quoteNotes.some(n=>(n||'').trim())
+    ||(quoteMeta.client||'').trim();
+}
+
+window.newQuoteDraft=function(){
+  if(hasDraftContent()&&!confirm('في بيانات في العرض الحالي لسه متحفظتش، هل تريد بدء عرض جديد وفقد التعديلات؟'))return;
   quoteLines=[{name:'',price:'',qty:''}];
   quoteNotes=[''];
-  quoteMeta={client:'',date:today()};
-  quoteView='editor';
-  renderQuotePage();
+  quoteMeta={client:'',date:today(),validUntil:''};
+  curQuoteId=null;
+  renderQuoteSideList();
+  renderQuoteDoc();
 };
 
-window.openQuoteFromList=function(id){
+window.loadQuote=function(id){
   const q=quotesData[id];if(!q)return;
-  currentQuoteId=id;
-  quoteLines=(q.lines&&q.lines.length)?q.lines.map(l=>({name:l.name||'',price:l.price||'',qty:l.qty||''})):[{name:'',price:'',qty:''}];
+  if(id!==curQuoteId&&hasDraftContent()&&!curQuoteId&&!confirm('في تعديلات لسه متحفظتش هتتفقد، هل تريد المتابعة؟'))return;
+  curQuoteId=id;
+  quoteLines=(q.lines&&q.lines.length)?q.lines.map(l=>({name:l.name||'',price:(l.price||l.price===0)?String(l.price):'',qty:(l.qty||l.qty===0)?String(l.qty):''})):[{name:'',price:'',qty:''}];
   quoteNotes=(q.notes&&q.notes.length)?[...q.notes]:[''];
-  quoteMeta={client:q.client||'',date:q.date||today()};
-  quoteView='editor';
-  renderQuotePage();
-};
-
-window.backToQuoteList=function(){
-  quoteView='list';
-  renderQuotePage();
+  quoteMeta={client:q.client||'',date:q.date||today(),validUntil:q.validUntil||''};
+  renderQuoteSideList();
+  renderQuoteDoc();
 };
 
 window.saveQuote=async function(){
-  const grandTotal=quoteLines.reduce((s,l)=>s+(parseFloat(l.price)||0)*(parseFloat(l.qty)||0),0);
-  const data={
-    client:quoteMeta.client||'',
+  const payload={
+    client:(quoteMeta.client||'').trim(),
     date:quoteMeta.date||today(),
-    lines:quoteLines.map(l=>({name:l.name||'',price:l.price||'',qty:l.qty||''})),
-    notes:quoteNotes.filter(n=>typeof n==='string'),
-    grandTotal,
+    validUntil:quoteMeta.validUntil||'',
+    lines:quoteLines.map(l=>({name:(l.name||'').trim(),price:parseFloat(l.price)||0,qty:parseFloat(l.qty)||0})),
+    notes:quoteNotes.filter(n=>n!=null),
     updatedAt:serverTimestamp()
   };
-  if(currentQuoteId){
-    await setDoc(doc(db,'quotes',currentQuoteId),data,{merge:true});
-    toast('&#x1F4BE; تم حفظ التعديلات');
-  }else{
-    data.createdAt=serverTimestamp();
-    const ref=await addDoc(collection(db,'quotes'),data);
-    currentQuoteId=ref.id;
-    toast('&#x2705; تم حفظ عرض السعر');
-  }
+  try{
+    if(curQuoteId){
+      await setDoc(doc(db,'quotes',curQuoteId),payload,{merge:true});
+      toast('&#x1F4BE; تم تحديث عرض السعر');
+    }else{
+      const ref=await addDoc(collection(db,'quotes'),{...payload,createdAt:serverTimestamp()});
+      curQuoteId=ref.id;
+      toast('&#x1F4BE; تم حفظ عرض السعر');
+    }
+    renderQuoteSideList();renderQuoteDoc();
+  }catch(e){console.error(e);toast('&#x26A0;&#xFE0F; حصل خطأ أثناء الحفظ');}
 };
 
-window.deleteQuoteFromList=async function(id){
-  const q=quotesData[id];
-  if(!confirm('حذف عرض السعر الخاص بـ "'+(q?.client||'بدون اسم')+'"؟'))return;
-  await deleteDoc(doc(db,'quotes',id));
-  if(currentQuoteId===id){currentQuoteId=null;quoteView='list';renderQuotePage()}
+window.deleteQuoteSaved=async function(id){
+  if(!confirm('حذف عرض السعر ده نهائياً؟'))return;
+  try{await deleteDoc(doc(db,'quotes',id));}catch(e){console.error(e);toast('&#x26A0;&#xFE0F; حصل خطأ أثناء الحذف');return}
+  if(curQuoteId===id){
+    curQuoteId=null;
+    quoteLines=[{name:'',price:'',qty:''}];
+    quoteNotes=[''];
+    quoteMeta={client:'',date:today(),validUntil:''};
+    renderQuoteDoc();
+  }
   toast('&#x1F5D1; تم الحذف');
 };
 
